@@ -30,6 +30,7 @@ class pyDetourConfig:
 	def __init__(self, addr):
 		self.address = addr
 		self.callback = None
+		self.callback_obj = None
 
 class callback_obj:
 	"""This is the object passed to function that are registed as callbacks. It should be the only way to interact with gdetour"""
@@ -100,7 +101,7 @@ class callback_obj:
 
 detour_list = {}
 class Detour:
-	def __init__(self, address, overwrite_len, bytes_to_pop, return_to_original, callback=None, type=0):
+	def __init__(self, address, overwrite_len, bytes_to_pop, return_to_original, callback=None, type=0, callback_class=None):
 		"""
 			If return_to_original is true, then bytes_to_pop is not important.
 			Conversely, if it is false, overwrite_len is not important.
@@ -111,6 +112,9 @@ class Detour:
 		gdetour.setDetourSettings(address, (bytes_to_pop, return_to_original))
 		self.config = pyDetourConfig(address)
 		self.config.callback = callback
+		if callback_class is None:
+			callback_class = callback_obj
+		self.config.callback_obj = callback_class
 		detour_list[address] = self
 
 	def removeDetour(self):
@@ -121,7 +125,11 @@ class Detour:
 		if address not in detour_list:
 			raise Exception, "Detour... doesn't exist...?"
 		if callable(detour_list[address].config.callback):
-			detour_list[address].config.callback(callback_obj(address, registers, caller))
+			try:
+				obj = detour_list[address].config.callback_obj(address, registers, caller)
+				detour_list[address].config.callback(callback_obj(address, registers, caller))
+			except Exception, e:
+				print repr(e)
 
 
 
