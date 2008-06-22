@@ -101,6 +101,10 @@ class callback_obj:
 detour_list = {}
 class Detour:
 	def __init__(self, address, overwrite_len, bytes_to_pop, return_to_original, callback=None, type=0):
+		"""
+			If return_to_original is true, then bytes_to_pop is not important.
+			Conversely, if it is false, overwrite_len is not important.
+		"""
 		if address in detour_list:
 			raise Exception, "Detour already exists!"
 		gdetour.createDetour(address, overwrite_len, bytes_to_pop, type)
@@ -138,8 +142,7 @@ gdetour.callback = main_callback
 
 def testcb(d):
 	d.dump()
-	d.changeConfiguration("executeOriginal", 1)
 	print "\n" + repr(d.getConfiguration())
 	
 
-x = Detour(0x00ef1000, 6, 4, False, testcb)
+x = Detour(0x00ef1000, 6, 4, True, testcb)
