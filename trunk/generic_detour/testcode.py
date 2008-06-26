@@ -229,6 +229,12 @@ class Detour:
 		if address in detour_list:
 			raise Exception, "Detour already exists!"
 
+		if callable(return_to_original) and callback == None:
+			#this if supports constructs like this:
+			#x = Detour(0x123, returnTrue)
+			callback = return_to_original
+			return_to_original = False
+
 		try:
 
 			if overwrite_len is None:
@@ -303,6 +309,12 @@ gdetour.callback = main_callback
 ##############################################################
 ##############################################################
 
+def returnTrue(d):
+	d.registers.eax = 1
+
+def returnFalse(d):
+	d.registers.eax = 0
+	
 def testcb(d):
 	d.dump()
 	d.registers.eax = 1;
