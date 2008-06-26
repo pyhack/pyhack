@@ -95,6 +95,8 @@ class pyDetourConfig:
 		self.address = addr
 		self.callback = None
 		self.callback_obj = None
+		self.functionType = "cdecl"
+		self.bytesToPop = 0 #needed for calling original
 
 ##############################################################
 class callback_obj:
@@ -107,6 +109,11 @@ class callback_obj:
 		self.detour = detour_list[address]
 
 	def applyRegisters(self):
+		"""This function is automaticly called after the callback function.
+		It will set the registers to what was specified in the object.
+
+		It is possible you will .remove() the detour before this is done.
+		In that case, call this function manually before doing so."""
 		r = (
 			self.registers.eax,
 			self.registers.ecx,
@@ -121,13 +128,16 @@ class callback_obj:
 
 	@staticmethod
 	def read(address, length):
+		"""Reads length bytes from address"""
 		return gdetour.read(address, length)
 
 	@staticmethod
-	def write(address, length):
-		return gdetour.write(address, length)
+	def write(address, length, bytes):
+		"""Writes length bytes to address"""
+		return gdetour.write(address, length, bytes)
 
 	def dump(self):
+		"""Convient utility function to dump information about this function call"""
 		print "Dump for call to 0x%08x from 0x%08x:"%(self.address, self.caller)
 		print "\tRegisters:"
 		print "\t\tEAX: 0x%08x" % (self.registers.eax)
@@ -168,6 +178,7 @@ class callback_obj:
 		return gdetour.writeDWORD(self.registers.esp+add, dword)
 	
 	def getStringArg(self, attrNum):
+		"""1 based argument getted function. Looks up an ASCII string pointed to by the argument."""
 		addr = self.getArg(attrNum)
 		return gdetour.readASCIIZ(addr)
 
@@ -183,10 +194,29 @@ class callback_obj:
 		gdetour.setDetourSettings(self.address, p)
 
 	def changeConfiguration(self, settingname, settingvalue):
+		"""Helper funtion to change configuration settings on the fly."""
 		d = self.getConfiguration()
 		d[settingname] = settingvalue
 		self.setConfiguration(d)
 
+	def callOriginal(self, params, registers=None, functiontype=None):
+		if (functiontype == None):
+			functiontype = self.detour.config.functionType
+		if functiontype == "cdecl":
+			pass
+			#push all the vars
+			#call original
+			#pop all the vars
+		elif functiontype == "stdcall":
+			pass
+			#push stack magic number
+			#push all the vars
+			#call original
+			#check stack magic number
+			#pop all the vars
+		else:
+			raise Exception("Unsupported function type %s"%(functiontype))
+		raise NotImplementedError("Calling original functions not yet supported");
 ##############################################################
 ##############################################################
 
@@ -213,11 +243,14 @@ class Detour:
 			else:
 				t = "stdcall"
 			print "Detouring function at 0x%08x (%s%s)"%(address, t, (""," 0x%x bytes"%(bytes_to_pop))[t=="stdcall"])
+			
 			gdetour.createDetour(address, overwrite_len, bytes_to_pop, type)
 			gdetour.setDetourSettings(address, (bytes_to_pop, return_to_original))
 			self.config = pyDetourConfig(address)
 			self.address = address
 			self.config.callback = callback
+			self.config.functionType = t
+			self.config.bytesToPop = bytes_to_pop
 			if callback_class is None:
 				callback_class = callback_obj
 			self.config.callback_obj = callback_class
@@ -238,13 +271,19 @@ class Detour:
 		if callable(detour_list[address].config.callback):
 			try:
 				obj = detour_list[address].config.callback_obj(address, registers, caller)
-				detour_list[address].config.callback(callback_obj(address, registers, caller))
+				if obj is None:
+					obj = callback_obj(address, registers, caller)
+				detour_list[address].config.callback(obj)
 			except Exception, e:
 				import traceback
 				print "Exception in callback for function at address 0x%08x:\n"%(address)
 				traceback.print_exc()
 				print ""
 				#raise e
+			try:
+				obj.applyRegisters()
+			except LookupError: #could have removed the detour from inside the callback function
+				pass
 
 
 
@@ -267,8 +306,9 @@ gdetour.callback = main_callback
 def testcb(d):
 	d.dump()
 	d.registers.eax = 1;
-	d.applyRegisters()
-	d.detour.remove()
+	#d.applyRegisters()
+	#d.detour.remove()
+	d.callOriginal(("lol whut"))
 
 
 x = Detour(0x00a31000, False, testcb)
