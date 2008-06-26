@@ -10,6 +10,7 @@ print "testcode.py loaded"
 ##############################################################
 ##############################################################
 ##############################################################
+detour_list = {}
 
 class register_list:
 	"""Helpful register_list class. Holds the 8 main registers and the flags register"""
@@ -29,9 +30,10 @@ class register_list:
 
 ##############################################################
 ####Helper functions
-def findOptimalTrampolineLength(address, minlen=5, maxlen=12, noisy=True):
+def findOptimalTrampolineLength(address, minlen=5, maxlen=12, noisy=False):
 	if noisy: print "Determining optimal tramploine size for address 0x%08x:"%(address)
 	buffer = gdetour.read(address, maxlen+5)
+
 	l = 0
 	ic = 0
 	offset = 0
@@ -48,7 +50,8 @@ def findOptimalTrampolineLength(address, minlen=5, maxlen=12, noisy=True):
 	if noisy: print "optimal size is %d bytes (%d instructions)"%(l, ic)
 	return l
 
-def findBytesToPop(address, maxlen=512, noisy=True):
+def findBytesToPop(address, maxlen=512, noisy=False):
+	t = None
 	if noisy: print "Determining bytes to pop for function at address 0x%08x:"%(address)
 	buffer = gdetour.read(address, maxlen+5)
 	#buffer = "\xC3" #ret
@@ -69,18 +72,20 @@ def findBytesToPop(address, maxlen=512, noisy=True):
 		if istr.strip() == "ret":
 			if noisy: print "found ret instruction (no bytes to pop)"
 			num = 0
+			t = "cdecl"
 			break
 		if istr.startswith("retn"):
 			if noisy: print i
 			num = istr[5:]
 			num = int(num, 16)
-			print "found retn instruction, bytes to pop = %s"%(num)
+			t = "stdcall"
+			if noisy: print "found retn instruction, bytes to pop = %s"%(num)
 			break
 	if num is None:
 		if noisy: print "warning, no retn instruction found"
 	else:
 		if noisy: print "bytes to pop is %d bytes (found after %d instructions)"%(num, ic)
-	return num
+	return (t, num)
 
 ##############################################################
 
@@ -99,6 +104,20 @@ class callback_obj:
 		self.address = address	
 		self.registers = registers
 		self.caller = caller
+		self.detour = detour_list[address]
+
+	def applyRegisters(self):
+		r = (
+			self.registers.eax,
+			self.registers.ecx,
+			self.registers.edx,
+			self.registers.ebx,
+			self.registers.esp,
+			self.registers.ebp,
+			self.registers.esi,
+			self.registers.edi,
+			)
+		return gdetour.setRegisters(self.address, r, self.registers.flags, self.caller)
 
 	@staticmethod
 	def read(address, length):
@@ -122,21 +141,32 @@ class callback_obj:
 		print "\t\tflags: 0x%08x" % (self.registers.flags)
 		for i in xrange(1, 8):
 			if i == 1:
-				t = ""
+				t = "   "
 			else:
-				t = "+%X"%((i-1)*4)
-			a = self.getArg(i)
-			b = self.getStringArg(i)
-			if b is None:
+				t = "+%02X"%((i-1)*4)
+			try:
+				a = self.getArg(i)
+			except gdetour.DetourAccessViolationException:
+				print "\t[ESP%s]: Access Violation"% (t)
+
+			try:
+				b = self.getStringArg(i)
+				print "\t[ESP%s]: 0x%08x ('%s')" % (t, a, b)				
+			except gdetour.DetourAccessViolationException:
 				print "\t[ESP%s]: 0x%08x" % (t, a)
-			else:
-				print "\t[ESP%s]: 0x%08x ('%s')" % (t, a, b)
+
+
 
 	def getArg(self, attrNum):
 		"""1 based argument getter function"""
 		add = (attrNum - 1) * 4 #4 byte paramters
 		return gdetour.readDWORD(self.registers.esp+add)
 
+	def setArg(self, attrNum, dword):
+		"""1 based argument setter function"""
+		add = (attrNum - 1) * 4 #4 byte paramters
+		return gdetour.writeDWORD(self.registers.esp+add, dword)
+	
 	def getStringArg(self, attrNum):
 		addr = self.getArg(attrNum)
 		return gdetour.readASCIIZ(addr)
@@ -160,7 +190,6 @@ class callback_obj:
 ##############################################################
 ##############################################################
 
-detour_list = {}
 class Detour:
 	def __init__(self, address, return_to_original, callback=None, bytes_to_pop=None, overwrite_len=None, type=0, callback_class=None):
 		"""
@@ -170,27 +199,37 @@ class Detour:
 		if address in detour_list:
 			raise Exception, "Detour already exists!"
 
-		if overwrite_len is None:
-			overwrite_len = findOptimalTrampolineLength(address)
-			if overwrite_len < 5 or overwrite_len > 12:
-				print "Warning: guessed overwrite_len is %d for function at address 0x%08x"%(overwrite_len, address)
+		try:
 
-		if bytes_to_pop is None:
-			bytes_to_pop = findBytesToPop(address)
+			if overwrite_len is None:
+				overwrite_len = findOptimalTrampolineLength(address)
+				if overwrite_len < 5 or overwrite_len > 12:
+					print "Warning: guessed overwrite_len is %d for function at address 0x%08x"%(overwrite_len, address)
+
 			if bytes_to_pop is None:
-				raise Exception("Could not determine number of bytes to pop on return from function at 0x%08x"%(address))
+				(t, bytes_to_pop) = findBytesToPop(address)
+				if bytes_to_pop is None:
+					raise Exception("Could not determine number of bytes to pop on return from function at 0x%08x"%(address))
+			else:
+				t = "stdcall"
+			print "Detouring function at 0x%08x (%s%s)"%(address, t, (""," 0x%x bytes"%(bytes_to_pop))[t=="stdcall"])
+			gdetour.createDetour(address, overwrite_len, bytes_to_pop, type)
+			gdetour.setDetourSettings(address, (bytes_to_pop, return_to_original))
+			self.config = pyDetourConfig(address)
+			self.address = address
+			self.config.callback = callback
+			if callback_class is None:
+				callback_class = callback_obj
+			self.config.callback_obj = callback_class
+			detour_list[address] = self
+			
+		except gdetour.DetourAccessViolationException:
+			raise gdetour.DetourAccessViolationException("Invalid detour address 0x%08x"%(address))
 
-		gdetour.createDetour(address, overwrite_len, bytes_to_pop, type)
-		gdetour.setDetourSettings(address, (bytes_to_pop, return_to_original))
-		self.config = pyDetourConfig(address)
-		self.config.callback = callback
-		if callback_class is None:
-			callback_class = callback_obj
-		self.config.callback_obj = callback_class
-		detour_list[address] = self
-
-	def removeDetour(self):
-		raise NotImplementedError
+	def remove(self):
+		gdetour.removeDetour(self.address)
+		self.config = None
+		del detour_list[self.address]
 
 	@classmethod
 	def do_callback(cls, address, registers, caller):
@@ -201,7 +240,11 @@ class Detour:
 				obj = detour_list[address].config.callback_obj(address, registers, caller)
 				detour_list[address].config.callback(callback_obj(address, registers, caller))
 			except Exception, e:
-				print repr(e)
+				import traceback
+				print "Exception in callback for function at address 0x%08x:\n"%(address)
+				traceback.print_exc()
+				print ""
+				#raise e
 
 
 
@@ -223,7 +266,9 @@ gdetour.callback = main_callback
 
 def testcb(d):
 	d.dump()
-	print "\n" + repr(d.getConfiguration())
+	d.registers.eax = 1;
+	d.applyRegisters()
+	d.detour.remove()
 
 
-x = Detour(0x00ef1000, True, testcb)
+x = Detour(0x00a31000, False, testcb)
