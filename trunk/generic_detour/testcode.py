@@ -309,6 +309,10 @@ gdetour.callback = main_callback
 ##############################################################
 ##############################################################
 
+def interact():
+	import code
+	code.interact(banner="\nIn Python Interactive Loop. Enter Ctrl-Z to continue.", local=globals())
+
 def returnTrue(d):
 	d.registers.eax = 1
 
@@ -323,4 +327,6 @@ def testcb(d):
 	d.callOriginal(("lol whut"))
 
 
-x = Detour(0x00a31000, False, testcb)
+x = Detour(0x00a610f0, False, testcb)
+
+interact()
