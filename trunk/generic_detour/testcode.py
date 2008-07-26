@@ -1,5 +1,5 @@
 import gdetour
-import pydbg.pydasm
+import pydasm
 
 print "testcode.py loaded"
 
@@ -38,10 +38,10 @@ def findOptimalTrampolineLength(address, minlen=5, maxlen=12, noisy=False):
 	ic = 0
 	offset = 0
 	while l < maxlen:
-		i = pydbg.pydasm.get_instruction(buffer[offset:], pydbg.pydasm.MODE_32)
+		i = pydasm.get_instruction(buffer[offset:], pydasm.MODE_32)
 		if not i:
 			break
-		if noisy: print "%d bytes: %s"%(i.length, pydbg.pydasm.get_instruction_string(i, pydbg.pydasm.FORMAT_INTEL, 0))
+		if noisy: print "%d bytes: %s"%(i.length, pydasm.get_instruction_string(i, pydasm.FORMAT_INTEL, 0))
 		ic += 1
 		offset += i.length
 		l += i.length
@@ -61,10 +61,10 @@ def findBytesToPop(address, maxlen=512, noisy=False):
 	offset = 0
 	num = None
 	while l < maxlen:
-		i = pydbg.pydasm.get_instruction(buffer[offset:], pydbg.pydasm.MODE_32)
+		i = pydasm.get_instruction(buffer[offset:], pydasm.MODE_32)
 		if not i:
 			break
-		istr = pydbg.pydasm.get_instruction_string(i, pydbg.pydasm.FORMAT_INTEL, 0)
+		istr = pydasm.get_instruction_string(i, pydasm.FORMAT_INTEL, 0)
 		if noisy: print "%d bytes: %s"%(i.length, istr)
 		ic += 1
 		offset += i.length
@@ -318,6 +318,14 @@ def returnTrue(d):
 
 def returnFalse(d):
 	d.registers.eax = 0
+
+flag = False
+def returnTrueOnce(d):
+	if not globals()['flag']:
+		d.registers.eax = 1
+		globals()['flag'] = True
+	else:
+		d.registers.eax = 0
 	
 def testcb(d):
 	d.dump()
@@ -327,6 +335,6 @@ def testcb(d):
 	d.callOriginal(("lol whut"))
 
 
-x = Detour(0x010510f0, False, testcb)
+x = Detour(0x012310f0, False, returnTrueOnce)
 
 interact()
