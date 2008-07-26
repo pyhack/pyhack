@@ -321,12 +321,12 @@ def returnFalse(d):
 	
 def testcb(d):
 	d.dump()
-	d.registers.eax = 1;
+	d.registers.eax = 0;
 	#d.applyRegisters()
 	#d.detour.remove()
 	d.callOriginal(("lol whut"))
 
 
-x = Detour(0x00a610f0, False, testcb)
+x = Detour(0x010510f0, False, testcb)
 
 interact()
