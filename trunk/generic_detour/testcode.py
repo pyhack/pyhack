@@ -335,6 +335,6 @@ def testcb(d):
 	d.callOriginal(("lol whut"))
 
 
-x = Detour(0x012310f0, False, returnTrueOnce)
+x = Detour(0x00da10f0, False, returnTrueOnce)
 
 interact()
