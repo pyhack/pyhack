@@ -32,7 +32,7 @@ class register_list:
 ####Helper functions
 def findOptimalTrampolineLength(address, minlen=5, maxlen=12, noisy=False):
 	if noisy: print "Determining optimal tramploine size for address 0x%08x:"%(address)
-	buffer = gdetour.read(address, maxlen+5)
+	buffer = gdetour.util.read(address, maxlen+5)
 
 	l = 0
 	ic = 0
@@ -53,7 +53,7 @@ def findOptimalTrampolineLength(address, minlen=5, maxlen=12, noisy=False):
 def findBytesToPop(address, maxlen=512, noisy=False):
 	t = None
 	if noisy: print "Determining bytes to pop for function at address 0x%08x:"%(address)
-	buffer = gdetour.read(address, maxlen+5)
+	buffer = gdetour.util.read(address, maxlen+5)
 	#buffer = "\xC3" #ret
 	#buffer = "\xC2\x04" #retn 4
 	l = 0
@@ -129,12 +129,12 @@ class callback_obj:
 	@staticmethod
 	def read(address, length):
 		"""Reads length bytes from address"""
-		return gdetour.read(address, length)
+		return gdetour.util.read(address, length)
 
 	@staticmethod
 	def write(address, length, bytes):
 		"""Writes length bytes to address"""
-		return gdetour.write(address, length, bytes)
+		return gdetour.util.write(address, length, bytes)
 
 	def dump(self):
 		"""Convient utility function to dump information about this function call"""
@@ -170,17 +170,17 @@ class callback_obj:
 	def getArg(self, attrNum):
 		"""1 based argument getter function"""
 		add = (attrNum - 1) * 4 #4 byte paramters
-		return gdetour.readDWORD(self.registers.esp+add)
+		return gdetour.util.readDWORD(self.registers.esp+add)
 
 	def setArg(self, attrNum, dword):
 		"""1 based argument setter function"""
 		add = (attrNum - 1) * 4 #4 byte paramters
-		return gdetour.writeDWORD(self.registers.esp+add, dword)
+		return gdetour.util.writeDWORD(self.registers.esp+add, dword)
 	
 	def getStringArg(self, attrNum):
 		"""1 based argument getted function. Looks up an ASCII string pointed to by the argument."""
 		addr = self.getArg(attrNum)
-		return gdetour.readASCIIZ(addr)
+		return gdetour.util.readASCIIZ(addr)
 
 	def getConfiguration(self):
 		n = ["bytesToPop", "executeOriginal"]
@@ -334,6 +334,7 @@ def testcb(d):
 	#d.detour.remove()
 	d.callOriginal(("lol whut"))
 
+interact()
 
 x = Detour(0x00da10f0, False, returnTrueOnce)
 
