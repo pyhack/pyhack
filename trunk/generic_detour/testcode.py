@@ -1,5 +1,7 @@
 import gdetour
+import ctypes
 import pydasm
+import struct
 
 print "testcode.py loaded"
 
@@ -87,6 +89,17 @@ def findBytesToPop(address, maxlen=512, noisy=False):
 		if noisy: print "bytes to pop is %d bytes (found after %d instructions)"%(num, ic)
 	return (t, num)
 
+def ValidReadPtr(addr, len=1):
+	return not ctypes.windll.kernel32.IsBadReadPtr(addr, len)
+def ValidWritePtr(addr, len=1):
+	return not ctypes.windll.kernel32.IsBadWritePtr(addr, len)
+def ValidPtr(addr, len=1):
+	return ValidWritePtr(addr, len)
+def RequireValidPtr(addr, len=1):
+	if not ValidPtr(addr, len):
+		raise Exception("Invalid Pointer 0x%08x"%(addr))
+
+
 ##############################################################
 
 class pyDetourConfig:
@@ -96,7 +109,8 @@ class pyDetourConfig:
 		self.callback = None
 		self.callback_obj = None
 		self.functionType = "cdecl"
-		self.bytesToPop = 0 #needed for calling original
+		self.bytesToPop = 0 #needed for calling originaldef ValidReadPtr(addr, len=1):
+
 
 ##############################################################
 class callback_obj:
@@ -334,8 +348,73 @@ def testcb(d):
 	#d.detour.remove()
 	d.callOriginal(("lol whut"))
 
+	
+def dword(x):
+	if isinstance(x, basestring): #Converting /from/ memory to python int
+		if len(x) % 4 != 0:
+			raise TypeError("dword() must be called with a byte strings whose size is a multiple of 4. (Got %i bytes)"%(len(x)))
+		n = len(x) / 4
+		r = struct.unpack("L"*n, x)
+		if len(r) == 1:
+			return r[0]
+		return r
+	#Converting /to/ memory layout
+	packed = ""
+	try:
+		for item in x:
+			try:
+				if item < 0 :
+					packed += struct.pack("l", item)
+				else:
+					packed += struct.pack("L", item)
+			except:
+				raise TypeError("Could not pack %r into dword"%(item))
+	except TypeError:
+		item = x
+		try:
+			if item < 0 :
+				packed += struct.pack("l", item)
+			else:
+				packed += struct.pack("L", item)
+		except:
+			raise TypeError("Could not pack %r into dword"%(x))
+	return packed
+def qword(x):
+	if isinstance(x, basestring): #Converting /from/ memory to python int
+		if len(x) % 8 != 0:
+			raise TypeError("qword() must be called with a byte strings whose size is a multiple of 8. (Got %i bytes)"%(len(x)))
+		n = len(x) / 8
+		r = struct.unpack("Q"*n, x)
+		if len(r) == 1:
+			return r[0]
+		return r
+	#Converting /to/ memory layout
+	packed = ""
+	try:
+		for item in x:
+			try:
+				if item < 0 :
+					packed += struct.pack("q", item)
+				else:
+					packed += struct.pack("Q", item)
+			except:
+				raise TypeError("Could not pack %r into qword"%(item))
+	except TypeError:
+		item = x
+		try:
+			if item < 0 :
+				packed += struct.pack("q", item)
+			else:
+				packed += struct.pack("Q", item)
+		except:
+			raise TypeError("Could not pack %r into qword"%(x))
+	return packed
+
+
+
+m = gdetour.memory
 interact()
 
-x = Detour(0x00da10f0, False, returnTrueOnce)
+x = Detour(0x010010f0, False, returnTrueOnce)
 
 interact()
