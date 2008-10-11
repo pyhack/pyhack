@@ -1,9 +1,18 @@
-import gdetour
+import imp
+x = imp.get_suffixes()[0][0]
+if x == "_d.pyd":
+        print "Running testcode.py under debugging python version\n"
+else:
+        print "Running testcode.py under release python version\n"        
+import sys
+print sys.path
+
+import pydetour
 import ctypes
 import pydasm
 import struct
 
-print "testcode.py loaded"
+#print "testcode.py loaded"
 
 ##############################################################
 ##############################################################
@@ -34,7 +43,7 @@ class register_list:
 ####Helper functions
 def findOptimalTrampolineLength(address, minlen=5, maxlen=12, noisy=False):
 	if noisy: print "Determining optimal tramploine size for address 0x%08x:"%(address)
-	buffer = gdetour.util.read(address, maxlen+5)
+	buffer = pydetour.util.read(address, maxlen+5)
 
 	l = 0
 	ic = 0
@@ -55,7 +64,7 @@ def findOptimalTrampolineLength(address, minlen=5, maxlen=12, noisy=False):
 def findBytesToPop(address, maxlen=512, noisy=False):
 	t = None
 	if noisy: print "Determining bytes to pop for function at address 0x%08x:"%(address)
-	buffer = gdetour.util.read(address, maxlen+5)
+	buffer = pydetour.util.read(address, maxlen+5)
 	#buffer = "\xC3" #ret
 	#buffer = "\xC2\x04" #retn 4
 	l = 0
@@ -103,7 +112,7 @@ def RequireValidPtr(addr, len=1):
 ##############################################################
 
 class pyDetourConfig:
-	"""Configuration of a gdetour that can be changed throughout the detour's lifetime"""
+	"""Configuration of a pydetour that can be changed throughout the detour's lifetime"""
 	def __init__(self, addr):
 		self.address = addr
 		self.callback = None
@@ -114,7 +123,7 @@ class pyDetourConfig:
 
 ##############################################################
 class callback_obj:
-	"""This is the object passed to function that are registed as callbacks. It should be the only way to interact with gdetour"""
+	"""This is the object passed to function that are registed as callbacks. It should be the only way to interact with pydetour"""
 
 	def __init__(self, address, registers, caller):
 		self.address = address	
@@ -138,17 +147,17 @@ class callback_obj:
 			self.registers.esi,
 			self.registers.edi,
 			)
-		return gdetour.setRegisters(self.address, r, self.registers.flags, self.caller)
+		return pydetour.setRegisters(self.address, r, self.registers.flags, self.caller)
 
 	@staticmethod
 	def read(address, length):
 		"""Reads length bytes from address"""
-		return gdetour.util.read(address, length)
+		return pydetour.util.read(address, length)
 
 	@staticmethod
 	def write(address, length, bytes):
 		"""Writes length bytes to address"""
-		return gdetour.util.write(address, length, bytes)
+		return pydetour.util.write(address, length, bytes)
 
 	def dump(self):
 		"""Convient utility function to dump information about this function call"""
@@ -170,13 +179,13 @@ class callback_obj:
 				t = "+%02X"%((i-1)*4)
 			try:
 				a = self.getArg(i)
-			except gdetour.DetourAccessViolationException:
+			except pydetour.DetourAccessViolationException:
 				print "\t[ESP%s]: Access Violation"% (t)
 
 			try:
 				b = self.getStringArg(i)
 				print "\t[ESP%s]: 0x%08x ('%s')" % (t, a, b)				
-			except gdetour.DetourAccessViolationException:
+			except pydetour.DetourAccessViolationException:
 				print "\t[ESP%s]: 0x%08x" % (t, a)
 
 
@@ -184,28 +193,28 @@ class callback_obj:
 	def getArg(self, attrNum):
 		"""1 based argument getter function"""
 		add = (attrNum - 1) * 4 #4 byte paramters
-		return gdetour.util.readDWORD(self.registers.esp+add)
+		return pydetour.util.readDWORD(self.registers.esp+add)
 
 	def setArg(self, attrNum, dword):
 		"""1 based argument setter function"""
 		add = (attrNum - 1) * 4 #4 byte paramters
-		return gdetour.util.writeDWORD(self.registers.esp+add, dword)
+		return pydetour.util.writeDWORD(self.registers.esp+add, dword)
 	
 	def getStringArg(self, attrNum):
 		"""1 based argument getted function. Looks up an ASCII string pointed to by the argument."""
 		addr = self.getArg(attrNum)
-		return gdetour.util.readASCIIZ(addr)
+		return pydetour.util.readASCIIZ(addr)
 
 	def getConfiguration(self):
 		n = ["bytesToPop", "executeOriginal"]
-		return dict(zip(n, gdetour.getDetourSettings(self.address)))
+		return dict(zip(n, pydetour.getDetourSettings(self.address)))
 
 	def setConfiguration(self, settingsDict):
 		n = ["bytesToPop", "executeOriginal"]
 		p = []
 		for x in n:
 			p.append(settingsDict[x])
-		gdetour.setDetourSettings(self.address, p)
+		pydetour.setDetourSettings(self.address, p)
 
 	def changeConfiguration(self, settingname, settingvalue):
 		"""Helper funtion to change configuration settings on the fly."""
@@ -264,8 +273,8 @@ class Detour:
 				t = "stdcall"
 			print "Detouring function at 0x%08x (%s%s)"%(address, t, (""," 0x%x bytes"%(bytes_to_pop))[t=="stdcall"])
 			
-			gdetour.createDetour(address, overwrite_len, bytes_to_pop, type)
-			gdetour.setDetourSettings(address, (bytes_to_pop, return_to_original))
+			pydetour.createDetour(address, overwrite_len, bytes_to_pop, type)
+			pydetour.setDetourSettings(address, (bytes_to_pop, return_to_original))
 			self.config = pyDetourConfig(address)
 			self.address = address
 			self.config.callback = callback
@@ -276,11 +285,11 @@ class Detour:
 			self.config.callback_obj = callback_class
 			detour_list[address] = self
 			
-		except gdetour.DetourAccessViolationException:
-			raise gdetour.DetourAccessViolationException("Invalid detour address 0x%08x"%(address))
+		except pydetour.DetourAccessViolationException:
+			raise pydetour.DetourAccessViolationException("Invalid detour address 0x%08x"%(address))
 
 	def remove(self):
-		gdetour.removeDetour(self.address)
+		pydetour.removeDetour(self.address)
 		self.config = None
 		del detour_list[self.address]
 
@@ -315,7 +324,7 @@ def main_callback(*args, **kwargs):
 	Detour.do_callback(detouraddr, registers, caller)
 
 
-gdetour.callback = main_callback	
+pydetour.callback = main_callback	
 
 
 ##############################################################
@@ -412,7 +421,7 @@ def qword(x):
 
 
 
-m = gdetour.memory
+m = pydetour.memory
 interact()
 
 x = Detour(0x010010f0, False, returnTrueOnce)
