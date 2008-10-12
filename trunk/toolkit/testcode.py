@@ -4,8 +4,13 @@ if x == "_d.pyd":
         print "Running testcode.py under debugging python version\n"
 else:
         print "Running testcode.py under release python version\n"        
+
 import sys
+import os
+print os.getcwd()
+
 print sys.path
+print "\n\n"
 
 import pydetour
 import ctypes
