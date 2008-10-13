@@ -5,14 +5,10 @@ if x == "_d.pyd":
 else:
         print "Running testcode.py under release python version\n"        
 
-import sys
-import os
-print os.getcwd()
-
-print sys.path
 print "\n\n"
 
-import pydetour
+
+#import pydetour
 import ctypes
 import pydasm
 import struct
@@ -329,7 +325,7 @@ def main_callback(*args, **kwargs):
 	Detour.do_callback(detouraddr, registers, caller)
 
 
-pydetour.callback = main_callback	
+#pydetour.callback = main_callback	
 
 
 ##############################################################
@@ -426,9 +422,9 @@ def qword(x):
 
 
 
-m = pydetour.memory
+#m = pydetour.memory
 interact()
 
-x = Detour(0x010010f0, False, returnTrueOnce)
+#x = Detour(0x010010f0, False, returnTrueOnce)
 
-interact()
+#interact()
