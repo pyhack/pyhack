@@ -8,7 +8,7 @@ else:
 print "\n\n"
 
 
-#import pydetour
+import pydetour
 import ctypes
 import pydasm
 import struct
@@ -422,9 +422,9 @@ def qword(x):
 
 
 
-#m = pydetour.memory
+m = pydetour.memory
 interact()
 
-#x = Detour(0x010010f0, False, returnTrueOnce)
+x = Detour(0x00a41140, False, returnTrueOnce)
 
-#interact()
+interact()
