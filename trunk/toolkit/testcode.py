@@ -325,7 +325,7 @@ def main_callback(*args, **kwargs):
 	Detour.do_callback(detouraddr, registers, caller)
 
 
-#pydetour.callback = main_callback	
+pydetour.callback = main_callback	
 
 
 ##############################################################
