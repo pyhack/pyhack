@@ -12,8 +12,9 @@ import pickle
 
 targets = {
 	'randomNumber': {
-		'exe': r"Z:\testApp\Release\randomNumber.exe",
-		'startIn': r"Z:\testApp\Release",
+		'exe': r"Z:\pyhack\testApps\randomNumber\Release\randomNumber.exe",
+
+		'startIn': r"Z:\pyhack\testApps\randomNumber\Release",
 		'args': r"",
 		'pycode': r"Z:\pyhack\trunk\pyhack\apps\randomNumber.py",
 	}
