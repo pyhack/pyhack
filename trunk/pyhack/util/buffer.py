@@ -57,15 +57,32 @@ class ASMBuffer(Buffer):
 	def cmpEAX_Byte(self, b):
 		self.push([0x83, 0xF8])
 		self._appendBYTE(b)
-	def namedJNZ(self, name):
-		self.namedJumps[name] = {'jmpLen': 1, 'start': self.i, 'end': None, 'dist': None }
-		self.push(0x75)
+	def addESP(self, b):
+		self.push([0x83, 0xC4])
+		self._appendBYTE(b)
+	def addEAX(self, b):
+		self.push([0x83, 0xC0])
+		self._appendBYTE(b)
+	def namedJZ(self, name):
+		self.namedJumps[name] = {}
+		self.namedJumps[name]['start'] = self.i
+		self.push(0x74)
+		self.namedJumps[name]['start_d'] = self.i
 		self.push(0x00) #this gets filled in
+		self.namedJumps[name]['beginjmp'] = self.i		
+	def namedJNZ(self, name):
+		self.namedJumps[name] = {}
+		self.namedJumps[name]['start'] = self.i
+		self.push(0x75)
+		self.namedJumps[name]['start_d'] = self.i
+		self.push(0x00) #this gets filled in
+		self.namedJumps[name]['beginjmp'] = self.i
 	def nameTarget(self,name):
+		self._appendBYTE(0xCC)
+		self._appendBYTE(0xCC)
 		if name not in self.namedJumps:
 			raise KeyError
 		nj = self.namedJumps[name]
 		nj['end'] = self.i
-		nj['dist'] = nj['end'] - nj['start']
-		self._appendBYTE(nj['dist'], nj['start']+nj['jmpLen'])
-		self.push(0x90)
+		nj['dist'] = nj['end'] - nj['beginjmp']
+		self._appendBYTE(nj['dist'], nj['start_d'])

@@ -3,17 +3,19 @@ This file is run outside of the process as a launcher.
 It's purpose is to decide what application to inject into, and app is associated with it.
 """
 import sys
+import os
 import logging
 from util.defines import *
 from util.process import Process
 
+import pickle
 
 targets = {
 	'randomNumber': {
 		'exe': r"Z:\testApp\Release\randomNumber.exe",
 		'startIn': r"Z:\testApp\Release",
 		'args': r"",
-		'pycode': r"Z:\pyhack\trunk\toolkit\randomNumber.py",
+		'pycode': r"Z:\pyhack\trunk\pyhack\apps\randomNumber.py",
 	}
 }
 
@@ -25,28 +27,57 @@ logging.basicConfig(
 log = logging.getLogger()
 
 def main(argv):
-	dll = r"Z:\pyhack\trunk\toolkit\Debug\pydetour_d.pyd"
 	targetName = 'randomNumber'
+	targetDef = targets[targetName]	
+	conf = {
+		'dll': r"Z:\pyhack\trunk\toolkit\Debug\pydetour_d.pyd",
+		'pyHome': r"Z:\pyhack\python",
+		'targetName': targetName,
+		'targetDef': targetDef,
+	}
 	
 	log.info("Initializing launchHack.py.")
 	log.info("Selected target: %s"%(targetName))
-	log.debug("Target DLL: %s"%(dll))
+	log.debug("Target DLL: %s"%(conf['dll']))
 	
-	targetDef = targets[targetName]
+	
 	
 	log.debug("Enabling SeDebugPrivilege")
 	Process().token.enableDebugPrivilege()
 	
+	os.environ['pyDetourConfig'] = pickle.dumps(conf)
+	p = os.environ['PATH'].split(";")
+	p.append(conf['pyHome']) #need to add path to python to python26_d can get loaded during CreateProcess()
+	os.environ['PATH'] = ';'.join(p)
 	
 	p = Process.create(targetDef['exe'], targetDef['args'], targetDef['startIn'], suspended=True)
-	print p.pid
 
-	def crt():
-		alloc = createInjectedStub(dll, targetDef, p.memory)
-		print p.createRemoteThreadWait(alloc['executionPoint']+1)
+	log.info("Spawned target, pid %d"%(p.pid))
 	
-	import code
-	code.interact(banner="", local=locals())
+	log.info("Attach debugger now, and press enter to continue")
+	raw_input()
+
+	log.info("Creating injection stub")
+	alloc = createInjectedStub(conf['dll'], targetDef, p.memory)
+	log.info("Creating remote thread")
+	retVal = p.createRemoteThreadWait(alloc['executionPoint']+1)
+	log.info("Remote thread return value: %d"%(retVal))
+	if retVal == 1:
+		log.error("Remote thread failed LoadLibrary()")
+	if retVal == 2:
+		log.error("Remote thread failed GetProcAddress() for dll function")
+	if retVal == 3:
+		log.error("Remote python function failed reading python file")
+	if retVal == 4:
+		log.error("Remote python function encountered an exception in python file")
+	log.info("Freeing memory")
+	for a in alloc.values():
+		p.memory.free(a)
+	if retVal == 0:
+		log.info("Resuming main thread")
+		p.resume()
+	#import code
+	#code.interact(banner="", local=locals())
 
 def createInjectedStub(dll, targetDef, mem):
 	alloc = {}
@@ -83,15 +114,25 @@ def createInjectedStub(dll, targetDef, mem):
 	buf.namedJNZ("gpa_success")
 
 	if True:
-		buf.pushByte(2) #PUSH 0x1 (thread exit code) 2 = GetProcAddress Failed
+		buf.pushByte(2) #PUSH 0x2 (thread exit code) 2 = GetProcAddress Failed
 		buf.movEAX_Addr(kernel32.GetProcAddress(hM, "ExitThread"))
-		buf.callEAX() #This cleanly exits the thread	
+		buf.callEAX() #This cleanly exits the thread
 
 	buf.nameTarget("gpa_success")
-	buf.movEAX_Addr(alloc['pyPath'])
+	buf.pushAddr(1) #turns on pdb debugging
+	buf.pushAddr(alloc['pyPath'])
 	buf.callEAX() #This calls our run_python_code script
+	buf.addESP(8)
+	buf.cmpEAX_Byte(0x0)
+	buf.namedJZ("run_success")
 
-
+	if True:
+		buf.addEAX(2) #increase the func's error code to accomodate for this stub's error code
+		buf.pushEAX()
+		buf.movEAX_Addr(kernel32.GetProcAddress(hM, "ExitThread"))
+		buf.callEAX() #This cleanly exits the thread
+	
+	buf.nameTarget("run_success")
 	buf.pushByte(0) #PUSH 0x0 (thread exit code)
 	buf.movEAX_Addr(kernel32.GetProcAddress(hM, "ExitThread"))
 	buf.callEAX() #This cleanly exits the thread

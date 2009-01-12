@@ -48,8 +48,10 @@ class Process(object):
 		if s == 0: raise WinError()
 		hThread = s
 		log.debug("Waiting for thread to complete")
-		s = kernel32.WaitForSingleObject(hThread, 0xFFFF)
-		if s == 0xFFFFFFFF: raise WinError() #WAIT_FAILED
+		s = None
+		while s != 0:
+			s = kernel32.WaitForSingleObject(hThread, 0xFF)
+			if s == 0xFFFFFFFF: raise WinError() #WAIT_FAILED
 		retStatus = DWORD()
 		s = kernel32.GetExitCodeThread(hThread, byref(retStatus))
 		if s == 0: raise WinError()
