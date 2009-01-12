@@ -438,6 +438,6 @@ m = pydetour.memory
 #interact()
 
 print "Detouring getRandomNumber() at 0x%X to always be 42"%(sym['getRandomNumber'])
-x = Detour(sym['getRandomNumber'], True, return42)
+x = Detour(sym['getRandomNumber'], False, return42)
 
 #interact()
