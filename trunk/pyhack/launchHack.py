@@ -18,6 +18,7 @@ targets = {
 		'args': r"",
 		'pycode': r"Z:\pyhack\trunk\pyhack\apps\randomNumber.py",
 	}
+	
 }
 
 logging.basicConfig(
@@ -28,7 +29,7 @@ logging.basicConfig(
 log = logging.getLogger()
 
 def main(argv):
-	targetName = 'randomNumber'
+	targetName = argv[1]
 	targetDef = targets[targetName]	
 	conf = {
 		'dll': r"Z:\pyhack\trunk\toolkit\Debug\pydetour_d.pyd",
@@ -52,8 +53,7 @@ def main(argv):
 	os.environ['PATH'] = ';'.join(p)
 	
 	p = Process.create(targetDef['exe'], targetDef['args'], targetDef['startIn'], suspended=True)
-
-	log.info("Spawned target, pid %d"%(p.pid))
+	log.info("Spawned target, pid %d, main thread id %s"%(p.pid, p._idMainThread))
 	
 	log.info("Attach debugger now, and press enter to continue")
 	raw_input()
@@ -92,6 +92,9 @@ def createInjectedStub(dll, targetDef, mem):
 	buf = ASMBuffer(128)
 
 	buf.INT3() #Debugger trap
+	
+	buf.movEAX_Addr(kernel32.GetProcAddress(hM, "AllocConsole"))
+	buf.callEAX() #AllocConsole() address -> EAX
 	
 	buf.pushAddr(alloc['dllPath'])
 	buf.movEAX_Addr(kernel32.GetProcAddress(hM, "LoadLibraryA"))
@@ -134,6 +137,13 @@ def createInjectedStub(dll, targetDef, mem):
 		buf.callEAX() #This cleanly exits the thread
 	
 	buf.nameTarget("run_success")
+	
+	
+	
+	
+	
+	#buf.INT3()
+	
 	buf.pushByte(0) #PUSH 0x0 (thread exit code)
 	buf.movEAX_Addr(kernel32.GetProcAddress(hM, "ExitThread"))
 	buf.callEAX() #This cleanly exits the thread

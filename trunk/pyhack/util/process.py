@@ -11,6 +11,7 @@ class Process(object):
 		self.pid = kernel32.GetCurrentProcessId()
 		self.hProcess = kernel32.GetCurrentProcess()
 		self._hMainThread = None
+		self._idMainThread = None
 	def __del__(self):
 		if self.hProcess:
 			kernel32.CloseHandle(self.hProcess)
@@ -75,10 +76,11 @@ class Process(object):
 	def create(cls, exe="", args="", startDir="", suspended=True):
 		"""Creates a process. Returns new Process object."""
 		CREATE_SUSPENDED = 0x00000004
+		CREATE_NEW_CONSOLE = 0x00000010
 
 		createFlags = 0
 		if suspended:
-			createFlags = createFlags | CREATE_SUSPENDED
+			createFlags = createFlags | CREATE_SUSPENDED | CREATE_NEW_CONSOLE
 
 		si = STARTUPINFOA()
 		si.cb = sizeof(si)
@@ -89,7 +91,7 @@ class Process(object):
 			args,
 			NULL,
 			NULL,
-			NULL,
+			1,
 			createFlags,
 			NULL,
 			startDir,
@@ -100,6 +102,7 @@ class Process(object):
 			raise WinError()
 		o = cls()
 		o._hMainThread = pi.hThread
+		o._idMainThread = windll.kernel32.GetThreadId(o._hMainThread)
 		o.hProcess = pi.hProcess
 		o.pid = pi.dwProcessId
 		return o
