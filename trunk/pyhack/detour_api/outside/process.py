@@ -1,6 +1,7 @@
 """This file holds utility classes used by the launcher. It is generally /not/ included inside the target's process"""
-from defines import *
 from ctypes import *
+
+from util.defines import *
 
 import logging
 log = logging.getLogger("process")

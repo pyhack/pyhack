@@ -8,7 +8,7 @@ __all__ = [
 	'interact',
 	'pdb',
 ]
-
+"""pythonDebug is an attribute that means we're in a debug build of Python"""
 pythonDebug = False
 x = imp.get_suffixes()[0][0]
 if x == "_d.pyd":
@@ -16,6 +16,7 @@ if x == "_d.pyd":
 
 
 class SuperInteractiveConsole(code.InteractiveConsole):
+	"""SuperInteractiveConsole properly emulates locals and globals when an InteractiveConsole is spawned."""
 	def __init__(self, globals=None, locals=None, filename="<console>"):
 		code.InteractiveConsole.__init__(self, locals=locals, filename=filename)
 		self.globals = globals
@@ -31,6 +32,7 @@ class SuperInteractiveConsole(code.InteractiveConsole):
 				print
 
 def interact(globals=None, locals=None, banner="\nIn Python Interactive Loop. Enter Ctrl-Z to continue."):
+	"""Convience method to call SuperInteractiveConsole"""
 	if globals is None:
 		globals = globals()
 	if locals is None:
@@ -39,4 +41,6 @@ def interact(globals=None, locals=None, banner="\nIn Python Interactive Loop. En
 	console.interact(banner)
 
 def pdb():
+	"""Break into pdb"""
+	import pdb
 	pdb.set_trace()

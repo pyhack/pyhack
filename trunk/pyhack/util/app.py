@@ -6,20 +6,8 @@ import pprint
 import ctypes
 kernel32 = ctypes.windll.kernel32
 
-from defines import ENVCONFVAR
-def _setup_target_environ():
-		pickled_conf = os.environ[ENVCONFVAR]
-		config = pickle.loads(pickled_conf)
-		# Add required paths to environment
-		dll_path = os.path.dirname(config['dll'])
-		target_conf = config['targetDef']
-		script_path = os.path.dirname(target_conf['pycode'])
-		sys.path.append(dll_path)
-		sys.path.append(script_path)
-_setup_target_environ()
 
 from pyhack import detour_api
-
 
 class APPlugin(object):
 	def __init__(self, patches):
@@ -46,16 +34,7 @@ class APPlugin(object):
 	def go(self):
 		detour_api.misc.interact(globals(), locals())
 		
-	def _setup_target_environ(self, osvar):
-		pickled_conf = os.environ[osvar]
-		self.config = pickle.loads(pickled_conf)
-		# Add required paths to environment
-		dll_path = os.path.dirname(self.config['dll'])
-		target_conf = self.config['targetDef']
-		script_path = os.path.dirname(target_conf['pycode'])
-		sys.path.append(dll_path)
-		sys.path.append(script_path)
-		
+	
 	def _setup_logging(self):
 		self.rootlog = logging.getLogger("")
 		self.rootlog.setLevel(logging.DEBUG)
