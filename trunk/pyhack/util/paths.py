@@ -20,12 +20,6 @@ class Paths:
 		cls.pycode = os.path.join(cls.pyHack, r"apps") #'Z:\\pyhack\\trunk\\pyhack\\apps'
 
 		cls.inside_bootstrap_py = os.path.join(cls.pyHack, r"detour_api\inside\bootstrap.py")
-	@classmethod
-	def receive_path_info(cls):
-		import os, pickle, sys
-		conf = pickle.loads(os.environ['pyHack_Config'])
-		#sys.path.append(os.path.dirname(conf['dll']))
-		sys.path.append(os.path.dirname(conf['targetDef'].pycode))
 
 	@classmethod
 	def get_dll_path(cls, debug=True):
