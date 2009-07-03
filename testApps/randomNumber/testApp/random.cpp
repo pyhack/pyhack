@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <Windows.h>
 
-int getRandomNumber(int maxNum) {
+__declspec(dllexport) int getRandomNumber(int maxNum) {
 	int r = rand();
 	while(r > maxNum) {
 		r = rand();
@@ -15,7 +15,7 @@ int getRandomNumber(int maxNum) {
 	return r;
 }
 
-bool isValid(int correct, int choice) {
+__declspec(dllexport) bool isValid(int correct, int choice) {
 	return correct == choice;
 }
 
