@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 This file is run outside of the process as a launcher.
 It's purpose is to decide what application to inject into, and app is associated with it.
@@ -10,7 +11,8 @@ if __name__ == "__main__":
 	#In turn, that allows up to get all the benifits of being in a package hierarchy,
 	#namely, a revised import order (check package dirs first) and better pickling (with full package names).
 	#The latter is required to send pickled objects to the child, and to ensure that things work well over there in general.
-	sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+	sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+	
 	import pyhack
 	__name__ = "pyhack.launchHack"
 	_runMain = True

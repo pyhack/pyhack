@@ -103,7 +103,6 @@ class Process(object):
 			raise WinError()
 		o = cls()
 		o._hMainThread = pi.hThread
-		print dir(pi)
 		o._idMainThread = pi.dwThreadId # windll.kernel32.GetThreadId(o._hMainThread)
 		o.hProcess = pi.hProcess
 		o.pid = pi.dwProcessId
