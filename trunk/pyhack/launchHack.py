@@ -89,12 +89,14 @@ def main(argv):
 	log.info("Goodbye.")
 	
 if _runMain:
-	try:
-		sys.exit(main(sys.argv))
-	except Exception:
-		import pdb
-		import sys
-		import traceback
-		traceback.print_exc()
-		print
-		pdb.post_mortem(sys.exc_info()[2])
+	sys.exit(main(sys.argv))
+	if False: #Generally, we don't really want to debug here.
+		try:
+			sys.exit(main(sys.argv))
+		except Exception:
+			import pdb
+			import sys
+			import traceback
+			traceback.print_exc()
+			print
+			pdb.post_mortem(sys.exc_info()[2])
