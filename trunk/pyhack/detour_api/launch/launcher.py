@@ -6,7 +6,7 @@ import pickle
 log = logging.getLogger(__name__)
 
 from util.defines import *
-from detour_api.outside.process import Process
+from detour_api.launch.process import Process
 
 from util.paths import Paths
 
