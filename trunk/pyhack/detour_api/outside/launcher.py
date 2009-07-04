@@ -113,7 +113,7 @@ class TargetLauncher(object):
 		yield (TargetLauncher.CREATION_PAUSE, (p, ))
 
 		log.info("Creating injection stub")
-		alloc = self._createInjectedStub(self.dll, targetDef, p.memory)
+		alloc = self._createInjectedStub(self.dll, p.memory)
 
 		yield (TargetLauncher.ALLOC_ALLOCATED, (alloc, ))
 		
@@ -129,12 +129,34 @@ class TargetLauncher(object):
 			p.memory.free(a)
 
 
-	def _createInjectedStub(self, dll, targetDef, mem):
-
+	def _createInjectedStub(self, dll, mem):
+		"""Allocate memory, create an ASM stub, copy strings and code into the target and executed via CreateRemoteThread().
+		
+		This stub has five goals:
+		- AllocConsole: This gives us a new console in the target process.
+		- LoadLibraryA: This is used to load the pydetour dll into the process.
+		- GetProcAddress: This is used to find our target exported function from within the above DLL.
+		- Launch python code: Call the exported function, passing the path of the bootstrap function.
+		- Return exit status via ExitThread.
+		
+		This function returns a dictionary of allocation points in the remote process.
+		
+		High level description of ASM function::
+		
+			def InjectedStub():
+				kernel32.AllocConsole()
+				hModule = kernel32.LoadLibraryA(dll)
+				if not hModule:
+					ExitThread(errors['ll_failed'])
+				rpf = kernel32.GetProcAddress(hModule, "run_python_file")
+				if not rpf:
+					ExitThread(errors['gpc_failed'])
+				ret = rpf(Paths.inside_bootstrap_py)
+				ExitThread(ret)
+		"""
 		errors = TargetLauncher.ERROR_CODES_NAMED
 
 		alloc = {}
-		#alloc['pyPath'] = mem.allocWrite(targetDef.pycode)
 		alloc['pyPath'] = mem.allocWrite(Paths.inside_bootstrap_py)
 		alloc['dllPath'] = mem.allocWrite(dll)
 		alloc['dllFunc'] = mem.allocWrite("run_python_file")
@@ -190,17 +212,13 @@ class TargetLauncher(object):
 		buf.namedJZ("run_success")
 
 		if True:
-			buf.addEAX(2) #increase the func's error code to accomodate for this stub's error code
+			#run_python_code failed, return it's error code
 			buf.pushEAX()
 			buf.movEAX_Addr(kernel32.GetProcAddress(hM, "ExitThread"))
 			buf.callEAX() #This cleanly exits the thread
 		
 		#---------------------------------------------------------------------
 		buf.nameTarget("run_success")
-		
-		
-		
-		
 		
 		#buf.INT3()
 		
