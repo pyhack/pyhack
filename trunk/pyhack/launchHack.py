@@ -34,7 +34,7 @@ import pprint
 from util.paths import Paths
 #sys.path.insert(0, Paths.trunk)
 
-from detour_api.outside.launcher import TargetLauncher, TargetLaunchException
+from detour_api.launch.launcher import TargetLauncher, TargetLaunchException
 from detour_api.targetDef import makeTargets
 
 import detour_api.misc
