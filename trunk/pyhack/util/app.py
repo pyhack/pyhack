@@ -7,20 +7,20 @@ import ctypes
 kernel32 = ctypes.windll.kernel32
 
 
-from pyhack import detour_api
+from pyhack import inside_api, util
 
 class APPlugin(object):
 	def __init__(self, patches):
 		self._setup_target_environ(ENVCONFVAR)
 		self._setup_logging()
 		
-		self.memory = detour_api.memory
-		self.patches = detour_api.PatchManager()
+		self.memory = inside_api.memory
+		self.patches = inside_api.PatchManager()
 		# Hide from debugger
 		self.patches.addCommonPatch("kernel32.IsDebuggerPresent").apply()
 		
 		pyVersion = "%s.%s.%s %s" % tuple(sys.version_info[:4])
-		if detour_api.misc.pythonDebug:
+		if util.debug.pythonDebug:
 			self.log.info("Running under Python DEBUG version %s" % pyVersion)
 		else:
 			self.log.info("Running under Python RELEASE version %s" % pyVersion)
@@ -32,7 +32,7 @@ class APPlugin(object):
 				pprint.pprint(self.patches[name])
 				
 	def go(self):
-		detour_api.misc.interact(globals(), locals())
+		util.debug.interact(globals(), locals())
 		
 	
 	def _setup_logging(self):

@@ -2,8 +2,8 @@
 from ..util.paths import Paths
 
 #from pyhack.util.app import APPlugin
-from pyhack.detour_api import inside as api
-from pyhack.detour_api.misc import interact
+import pyhack.inside_api as api
+from pyhack.util.debug import interact
 
 class NumberPatch(api.CommonPatch):
 	"""NumberPatch detours the target's getRandomNumber() function to return 42"""

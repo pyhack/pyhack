@@ -34,10 +34,10 @@ import pprint
 from util.paths import Paths
 #sys.path.insert(0, Paths.trunk)
 
-from detour_api.launch.launcher import TargetLauncher, TargetLaunchException
-from detour_api.targetDef import makeTargets
+from launcher_api.launcher import TargetLauncher, TargetLaunchException
+from launcher_api.targetDef import makeTargets
 
-import detour_api.misc
+from util.debug import *
 
 
 
@@ -51,7 +51,7 @@ targets = makeTargets({
 })
 
 def main(argv):
-	#detour_api.misc.pdb()
+	#pdb()
 	log.info("Welcome to pyHack.")
 	log.info("launchHack.py initializing.")
 	
@@ -84,7 +84,7 @@ def main(argv):
 	log.info("Resuming main thread")
 	p.resume()
 	
-	#detour_api.misc.interact(globals(), locals())
+	#interact(globals(), locals())
 
 	log.info("Goodbye.")
 	

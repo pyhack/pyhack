@@ -19,7 +19,7 @@ class Paths:
 		cls.testapps = os.path.join(cls.svn, r"testApps") #'Z:\\pyhack\\testApps'
 		cls.pycode = os.path.join(cls.pyHack, r"apps") #'Z:\\pyhack\\trunk\\pyhack\\apps'
 
-		cls.inside_bootstrap_py = os.path.join(cls.pyHack, r"detour_api\inside\bootstrap.py")
+		cls.inside_bootstrap_py = os.path.join(cls.pyHack, r"inside_api\bootstrap.py")
 
 	@classmethod
 	def get_dll_path(cls, debug=True):
