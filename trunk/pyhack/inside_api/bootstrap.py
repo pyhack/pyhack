@@ -19,4 +19,4 @@ import pyhack.apps #Prevents 'parent module not loaded' errors
 modname = os.path.splitext(os.path.basename(targetDef.pycode))
 
 with open(targetDef.pycode, "rb") as f:
-	mod = imp.load_source("pyhack.apps." + modname[0], targetDef.pycode, f)
+    mod = imp.load_source("pyhack.apps." + modname[0], targetDef.pycode, f)
