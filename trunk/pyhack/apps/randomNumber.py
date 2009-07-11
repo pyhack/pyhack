@@ -34,8 +34,8 @@ m = api.memory
 
 p = api.PatchManager()
 p.addCommonPatch("kernel32.IsDebuggerPresent").apply()
-p['number'] = NumberPatch()
-p['number'].apply()
+p['number'] = NumberPatch().apply()
+
 
 import pprint
 pprint.pprint(p)

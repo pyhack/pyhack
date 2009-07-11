@@ -44,3 +44,9 @@ def pdb():
     """Break into pdb"""
     import pdb
     pdb.set_trace()
+    
+def resumeThread(threadId):
+    THREAD_SUSPEND_RESUME = 0x0002
+    hThread = kernel32.OpenThread(THREAD_SUSPEND_RESUME, False, threadId)
+    kernel32.ResumeThread(hThread)
+    kernel32.CloseHandle(hThread)

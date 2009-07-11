@@ -24,9 +24,11 @@ class CommonPatch(object):
     def apply(self):
         for i in self.detours:
             i.apply()
+        return self
     def remove(self):
         for i in self.detours:
             i.remove()
+        return self
     def __repr__(self):
         countApplied = sum([1 for x in self.detours if x.applied is True])
         return "<%s %s (%s/%s)>"%(
