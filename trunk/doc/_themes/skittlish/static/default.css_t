@@ -17,13 +17,13 @@ body {
 }
 
 div.document {
-    background-color: #FFFFFF;
+    background: #FFFFFF url(side_bg.png) repeat-y 0 0
 }
 
 div.documentwrapper {
     float: left;
     width: 100%;
-	#1C1C1C url(clip_bg.gif) repeat-y scroll 225px 0px;
+ 
 }
 
 
@@ -61,7 +61,7 @@ div.related a {
 }
 
 div.sphinxsidebar {
-    background:#1c1c1c url(clip_bg.gif) repeat-y right;
+   
 }
 
 div.sphinxsidebarwrapper {
