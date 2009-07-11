@@ -1,3 +1,4 @@
+import ctypes
 from ctypes import *
 
 CHAR = c_char
@@ -33,9 +34,11 @@ class TOKEN_PRIVILEGES(Structure):
         ('Privileges', LUID_AND_ATTRIBUTES * 1),
     ]
 
-
-kernel32 = windll.kernel32
-
+if hasattr(ctypes, 'windll'):
+    kernel32 = windll.kernel32
+else:
+    kernel32 = None
+    
 NULL = None
 
 class STARTUPINFOA(Structure):

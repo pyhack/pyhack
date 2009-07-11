@@ -1,5 +1,15 @@
 """
-Implements `Buffer` and `ASMBuffer`.
+:mod:`util.buffer` module
+-----------------------------
+
+.. autoclass:: Buffer
+    :members:
+    :undoc-members:
+    
+.. autoclass:: ASMBuffer
+    :members:
+    :undoc-members:
+    
 """
 import struct
 import ctypes
@@ -13,8 +23,6 @@ class Buffer:
     Convience methods are `Buffer.appendBYTE`, `Buffer.appendWORD`, and `Buffer.appendDWORD`
     which, given an integer, calls push() with the in-memory representation of the integer. This
     representation is 1, 2, or 4 bytes, respectively.
-    
-    @author: CBWhiz
     """
     def __init__(self, maxlen):
         self.buf = ctypes.create_string_buffer(maxlen)
@@ -76,8 +84,6 @@ class ASMBuffer(Buffer):
     
     .. note:: `ASMBuffer.nameTarget` will first emit two bytes of 0xCC, that is, INT 3 unless allowFlowThrough=True
        is passed as a keyword argument.
-    
-    @author: CBWhiz
     """
     def __init__(self, maxlen):
         Buffer.__init__(self, maxlen)

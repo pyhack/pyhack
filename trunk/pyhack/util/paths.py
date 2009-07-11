@@ -1,6 +1,6 @@
-__doc__ = """
-util.paths module
------------------
+"""
+:mod:`util.paths` module
+----------------------------
 
 The :class:`Paths` class is responsible for calculating the absolute paths to 
 various required locations used by PyHack.

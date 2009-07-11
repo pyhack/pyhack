@@ -1,3 +1,28 @@
+r"""
+:mod:`launcher_api.launcher` module
+---------------------------------------
+
+The :mod:`pyhack.launcher_api.launcher` module contains the :class:`TargetLauncher`
+class used for establishing a target to run and the APP configuration for
+the injected PyDetour module.
+
+
+.. autoclass:: TargetLauncher(object)
+    :members: __init__
+    :undoc-members:
+    :inherited-members:
+      
+    *Parameters*:
+     * *dll : The path to the PyDetour module*
+     * *pyHome : The path to the PyHack module*
+     * *targetDef : A dictionary describing a target*
+     
+.. autoclass:: TargetLaunchException(Exception)
+    :members:
+    
+    .. automethod:: __init__(self, retVal, message)
+"""
+
 import os
 import sys
 import logging
@@ -5,10 +30,10 @@ import pickle
 
 log = logging.getLogger(__name__)
 
-from util.defines import *
-from launcher_api.process import Process
+from pyhack.util.defines import *
+from process import Process
 
-from util.paths import Paths
+from pyhack.util.paths import Paths
 
 class TargetLaunchException(Exception):
     def __init__(self, retVal, message):

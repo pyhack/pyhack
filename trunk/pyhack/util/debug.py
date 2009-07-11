@@ -1,3 +1,24 @@
+r"""
+:mod:`util.debug` module
+----------------------------
+
+The :mod:`pyhack.util.debug` module is useful for accessing an interactive debugging 
+console from within the target. This allows one to explore the process and
+make dynamic changes interactively.
+
+.. autodata:: pyhack.util.debug.pythonDebug
+
+.. autofunction:: interact(globals=None, locals=None, banner="\nIn Python Interactive Loop. Enter Ctrl-Z to continue.")
+
+.. autoclass:: SuperInteractiveConsole(code.InteractiveConsole)
+
+.. autofunction:: pdb()
+
+.. autofunction:: resumeThread()
+    
+"""
+
+
 import code
 import pdb
 import imp
@@ -8,15 +29,17 @@ __all__ = [
     'interact',
     'pdb',
 ]
-"""pythonDebug is an attribute that means we're in a debug build of Python"""
+
 pythonDebug = False
+"""True when the debug Python environment is present."""
+
 x = imp.get_suffixes()[0][0]
 if x == "_d.pyd":
     pythonDebug = True
 
 
 class SuperInteractiveConsole(code.InteractiveConsole):
-    """SuperInteractiveConsole properly emulates locals and globals when an InteractiveConsole is spawned."""
+    """Private. SuperInteractiveConsole properly emulates locals and globals when an InteractiveConsole is spawned."""
     def __init__(self, globals=None, locals=None, filename="<console>"):
         code.InteractiveConsole.__init__(self, locals=locals, filename=filename)
         self.globals = globals
@@ -46,6 +69,7 @@ def pdb():
     pdb.set_trace()
     
 def resumeThread(threadId):
+    """Resumes a target thread"""
     THREAD_SUSPEND_RESUME = 0x0002
     hThread = kernel32.OpenThread(THREAD_SUSPEND_RESUME, False, threadId)
     kernel32.ResumeThread(hThread)

@@ -1,7 +1,31 @@
-"""This file holds utility classes used by the launcher. It is generally /not/ included inside the target's process"""
+r"""
+:mod:`launcher_api.process` module
+---------------------------------------
+
+The :mod:`pyhack.launcher_api.process` module contains the :class:`TargetLauncher`
+class used for establishing a target to run and the APP configuration for
+the injected PyDetour module.
+
+.. autoclass:: Process(object)
+    :members:
+    :undoc-members:
+    :inherited-members:
+    
+
+.. autoclass:: VirtualMemory(object)
+    :members:
+    :undoc-members:
+    :inherited-members:
+    
+.. autoclass:: ProcessToken(object)
+    :members:
+    
+    .. automethod:: __init__(self, p)
+"""
+
 from ctypes import *
 
-from util.defines import *
+from pyhack.util.defines import *
 
 import logging
 log = logging.getLogger("process")
