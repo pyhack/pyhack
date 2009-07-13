@@ -39,7 +39,7 @@ log.addHandler(log_console_handler)
 
 
 log_fh = logging.FileHandler("pyhack_last_run.txt", "w")
-log_ff = logging.Formatter("%(asctime)-15s %(levelname)-8s %(name)s.%(funcName)s: %(message)s", datefmt='%Y-%m-%d %H:%M:%S')
+log_ff = logging.Formatter("%(asctime)-15s %(levelname)-8s %(name)s.%(funcName)s [%(lineno)s]: %(message)s", datefmt='%Y-%m-%d %H:%M:%S')
 log_fh.setFormatter(log_ff)
 log.addHandler(log_fh)
 
