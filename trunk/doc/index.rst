@@ -1,6 +1,8 @@
 Welcome to PyHack's documentation!
 ==================================
 
+Documentation last generated |today|.
+
 Contents:
 
 .. toctree::

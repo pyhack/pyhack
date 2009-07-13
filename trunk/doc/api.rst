@@ -3,7 +3,7 @@ The :mod:`pyhack` API
 
 The PyHack module is broken into three component parts. 
 
-1. PyDetour  :   A native Window's module containing a majority of the internal
+1. pydetour  :   A native Window's module containing a majority of the internal
                  injection machinery. This module is not typically the interest
                  of PyHack users, directly.
 2. launch_api:   The launch_api is specifically used for developing customized
@@ -15,6 +15,7 @@ The PyHack module is broken into three component parts.
 .. toctree::
    :maxdepth: 2
 
+   pydetour
    launch_api
    util
 
