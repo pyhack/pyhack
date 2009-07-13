@@ -74,3 +74,7 @@ def resumeThread(threadId):
     hThread = kernel32.OpenThread(THREAD_SUSPEND_RESUME, False, threadId)
     kernel32.ResumeThread(hThread)
     kernel32.CloseHandle(hThread)
+
+def debug_on_exception(func):
+    func.debug_on_exception = True
+    return func
