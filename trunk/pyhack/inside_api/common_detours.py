@@ -2,6 +2,8 @@ from detour import Detour
 import ctypes
 kernel32 = ctypes.windll.kernel32
 
+import pydetour
+
 class CommonPatchNotFoundException(Exception):
     pass
 
@@ -46,10 +48,18 @@ class IsDebuggerPresentPatch(CommonPatch):
         d.name = "IsDebuggerPresent? No."
         self.detours.append(d)
 
+class NoOutputDebugString(CommonPatch):
+    def __init__(self):
+        super(NoOutputDebugString, self).__init__()
 
+        o_d_s_addr = getProcAddress("kernel32.dll::OutputDebugStringA")
+        #We can't detour it - it'd be recursive.
+        #I can't just run the line below yet - I need to add VirtualProtect() calls to pydetour.memory
+        pydetour.memory[o_d_s_addr] = "C20400".decode("hex") #RETN 4
 
 c = {
     'kernel32.IsDebuggerPresent': IsDebuggerPresentPatch(),
+    #'kernel32.OutputDebugString': NoOutputDebugString(),
 }
 
 __all__ = ['getPatch', 'CommonPatch']
