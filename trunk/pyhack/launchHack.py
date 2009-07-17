@@ -67,7 +67,7 @@ def main(argv):
     log.info("Found targetDef for %s."%(targetName))
     log.debug("targetDef: %s"%(pprint.pformat(targetDef)))
     
-    path_dll = Paths.get_dll_path(debug=True)
+    path_dll = Paths.get_dll_path(debug=False)#True)
     l = TargetLauncher(
         dll = path_dll,
         pyHome = Paths.pyhome,
