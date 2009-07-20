@@ -2,6 +2,30 @@
 It needs to setup the paths, and then import the real target script"""
 
 import logging
+class DiscardFilter(logging.Filter):
+    def filter(self, record):
+        if logging.Filter.filter(self, record) == 1:
+            return 0
+        return 1
+        
+log = logging.getLogger()
+log.setLevel(logging.DEBUG)
+
+log_console_handler = logging.StreamHandler()
+log_console_handler.setLevel(logging.DEBUG)
+log_console_formatter = logging.Formatter("%(funcName)s: %(message)s")
+log_console_handler.setFormatter(log_console_formatter)
+log_console_handler.addFilter(DiscardFilter('pyhack.inside_api'))
+log.addHandler(log_console_handler)
+
+
+
+log_fh = logging.FileHandler("pyhack_last_run.txt", "w")
+log_ff = logging.Formatter("%(asctime)-15s %(levelname)-8s %(name)s.%(funcName)s [%(lineno)s]: %(message)s", datefmt='%Y-%m-%d %H:%M:%S')
+log_fh.setFormatter(log_ff)
+log.addHandler(log_fh)
+
+log = logging.getLogger(__name__)
 
 import os, pickle, sys, imp
 
@@ -20,32 +44,9 @@ import pyhack.apps #Prevents 'parent module not loaded' errors
 import pyhack.inside_api
 __name__ = "pyhack.inside_api.bootstrap"
 
-class DiscardFilter(logging.Filter):
-    def filter(self, record):
-        if logging.Filter.filter(self, record) == 1:
-            return 0
-        return 1
-
-log = logging.getLogger()
-log.setLevel(logging.DEBUG)
-
-log_console_handler = logging.StreamHandler()
-log_console_handler.setLevel(logging.DEBUG)
-log_console_formatter = logging.Formatter("%(funcName)s: %(message)s")
-log_console_handler.setFormatter(log_console_formatter)
-log_console_handler.addFilter(DiscardFilter('pyhack.inside_api'))
-log.addHandler(log_console_handler)
 
 
 
-log_fh = logging.FileHandler("pyhack_last_run.txt", "w")
-log_ff = logging.Formatter("%(asctime)-15s %(levelname)-8s %(name)s.%(funcName)s [%(lineno)s]: %(message)s", datefmt='%Y-%m-%d %H:%M:%S')
-log_fh.setFormatter(log_ff)
-log.addHandler(log_fh)
-
-
-
-log = logging.getLogger(__name__)
 
 modname = os.path.splitext(os.path.basename(targetDef.pycode))[0]
 

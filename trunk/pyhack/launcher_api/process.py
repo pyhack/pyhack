@@ -113,7 +113,7 @@ class Process(object):
 
         ret = kernel32.CreateProcessA(
             exe,
-            args,
+            '"%s" %s'%(exe, args),
             NULL,
             NULL,
             1,

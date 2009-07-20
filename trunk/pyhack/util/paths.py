@@ -15,7 +15,7 @@ The available class-attributes are:
  * **testapps** : Path to included example targets
  * **pycode** : Path to plugin directory
  * **pyHack** : Path to the PyHack module
-
+ * **common_plugins** : Path to common plugins
 """
 
 import os
@@ -45,6 +45,7 @@ class Paths:
         cls.pycode = os.path.join(cls.pyHack, r"apps") #'Z:\\pyhack\\trunk\\pyhack\\apps'
         cls.inside_bootstrap_py = os.path.join(cls.pyHack, r"inside_api\bootstrap.py")
 
+        cls.common_plugins = os.path.join(cls.pyHack, r"common_plugins")
     @classmethod
     def get_dll_path(cls, debug=True):
         """

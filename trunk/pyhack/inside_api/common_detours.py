@@ -1,11 +1,17 @@
-from detour import Detour
 import ctypes
+import os
+import logging
+import imp
+
+
+import inside_api as api
+
+from detour import Detour
+
+from pyhack.util.paths import Paths
+
+log = logging.getLogger(__name__)
 kernel32 = ctypes.windll.kernel32
-
-import pydetour
-
-class CommonPatchNotFoundException(Exception):
-    pass
 
 def returnTrue(d):
     d.registers.eax = 1
@@ -20,9 +26,12 @@ def getProcAddress(what):
         return 0
     return kernel32.GetProcAddress(hM, func)
 
-class CommonPatch(object):
+class CommonPlugin(object):
     def __init__(self):
         self.detours = []
+        self.plugin_init()
+    def plugin_init(self):
+        pass
     def apply(self):
         for i in self.detours:
             i.apply()
@@ -39,31 +48,3 @@ class CommonPatch(object):
             countApplied,
             len(self.detours)
         )
-            
-
-class IsDebuggerPresentPatch(CommonPatch):
-    def __init__(self):
-        CommonPatch.__init__(self)
-        d = Detour(getProcAddress("kernel32.dll::IsDebuggerPresent"), False, returnFalse)
-        d.name = "IsDebuggerPresent? No."
-        self.detours.append(d)
-
-class NoOutputDebugString(CommonPatch):
-    def __init__(self):
-        super(NoOutputDebugString, self).__init__()
-
-        o_d_s_addr = getProcAddress("kernel32.dll::OutputDebugStringA")
-        #We can't detour it - it'd be recursive.
-        #I can't just run the line below yet - I need to add VirtualProtect() calls to pydetour.memory
-        pydetour.memory[o_d_s_addr] = "C20400".decode("hex") #RETN 4
-
-c = {
-    'kernel32.IsDebuggerPresent': IsDebuggerPresentPatch(),
-    #'kernel32.OutputDebugString': NoOutputDebugString(),
-}
-
-__all__ = ['getPatch', 'CommonPatch']
-def getPatch(patchName):
-    if patchName in c:
-        return c[patchName]
-    raise CommonPatchNotFoundException(patchName)
