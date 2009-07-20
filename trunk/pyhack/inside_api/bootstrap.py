@@ -62,3 +62,19 @@ with open(targetDef.pycode, "rb") as f:
         traceback.print_exc()
         print
         pdb.post_mortem(sys.exc_info()[2])
+
+import threading
+
+
+from pyhack.util.debug import interact, resumeThread, debug_on_exception
+
+class InterpreterLoop(threading.Thread):
+    def __init__(self, *args, **kwargs):
+        super(InterpreterLoop, self).__init__(*args, **kwargs)
+        self.daemon = True
+    def run(self):
+        while True:
+            interact(globals(), mod.__dict__, banner="In Mainloop.")
+            
+mt = InterpreterLoop()
+mt.start()
