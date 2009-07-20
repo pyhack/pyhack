@@ -1,16 +1,13 @@
 
-import pydetour
+from pydetour import DetourAccessViolationException
+from pydetour import memory
 
-import detour
-from detour import *
+from pyhack.inside_api.detour import *
+from pyhack.inside_api.patch_manager import PatchManager
+from pyhack.inside_api.common_detours import CommonPlugin
 
 
-memory = pydetour.memory
 
-import common_detours
-from common_detours import CommonPlugin
-
-from patch_manager import PatchManager
 
 
 __all__ = ['misc', 'memory', 'PatchManager']

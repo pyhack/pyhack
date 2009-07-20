@@ -1,9 +1,13 @@
+import logging
+log = logging.getLogger(__name__)
+
 import sys
 import ctypes
 
 import pyhack
 import pyhack.inside_api as api
 from pyhack.inside_api.detour import Detour
+from pyhack.inside_api import DetourAccessViolationException
 from pyhack.inside_api.common_detours import getProcAddress
 
 kernel32 = ctypes.windll.kernel32
@@ -66,10 +70,11 @@ class NoTopMostPlugin(pyhack.inside_api.CommonPlugin):
         log.debug("Old Style: %#x"%(dwStyle))
         dwExStyle = dwExStyle & ~WS_EX_TOPMOST
         dwStyle = dwStyle | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX
-        dtr.setStackValue(1, dwExStyle)
-        dtr.setStackValue(4, dwStyle)
         log.debug("New Ex Style: %#x"%(dwExStyle))
         log.debug("New Style: %#x"%(dwStyle))
+
+        dtr.setStackValue(1, dwExStyle)
+        dtr.setStackValue(4, dwStyle)
         
         #interact(globals(), locals())
         #dtr.debug_break()

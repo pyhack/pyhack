@@ -1,5 +1,9 @@
+import logging
+log = logging.getLogger(__name__)
+
 import sys
 import ctypes
+from ctypes import *
 
 import pyhack
 import pyhack.inside_api as api

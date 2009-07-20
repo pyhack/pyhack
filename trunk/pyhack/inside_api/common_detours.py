@@ -4,11 +4,9 @@ import logging
 import imp
 
 
-import inside_api as api
+from .detour import Detour
 
-from detour import Detour
-
-from pyhack.util.paths import Paths
+from ..util.paths import Paths
 
 log = logging.getLogger(__name__)
 kernel32 = ctypes.windll.kernel32
