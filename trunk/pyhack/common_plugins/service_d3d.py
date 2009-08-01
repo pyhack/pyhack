@@ -27,18 +27,21 @@ class D3DHookService(api.CommonPlugin):
             False,
             self.hook_Direct3DCreate9
         ))
+    #@debug_on_exception
     def hook_Direct3DCreate9(self, dtr):
         print "In hook_Direct3DCreate9"
         #eventually we want to do this:
-        #ptr_d3d9 = dtr.callOriginal(4)
-        d3d_cr_ft = WINFUNCTYPE(c_int, c_int)
-        x = dtr.getConfiguration()['originalCodeAddress']
-        d3d_cr = d3d_cr_ft(x)
-        ret = d3d_cr(dtr.getStackValue(1))
+        ret = dtr.callOriginal(dtr.getStackValue(1))
+        
+        # d3d_cr_ft = WINFUNCTYPE(c_int, c_int)
+        # x = dtr.getConfiguration()['originalCodeAddress']
+        # d3d_cr = d3d_cr_ft(x)
+        # ret = d3d_cr(dtr.getStackValue(1))
+
         dtr.registers.eax = ret
         self.p_IDirect3D9 = ret
 
-        log.debug("found original d3d_create at %#x"%(x))
+        #log.debug("found original d3d_create at %#x"%(x))
         log.debug("got back p_IDirect3D9 at %#x"%(ret))
         log.debug("IDirect3D9 at %#x"%(dtr.memory[self.p_IDirect3D9].dword))
         #interact(globals(), locals())

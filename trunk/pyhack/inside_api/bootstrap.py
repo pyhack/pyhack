@@ -15,7 +15,7 @@ log_console_handler = logging.StreamHandler()
 log_console_handler.setLevel(logging.DEBUG)
 log_console_formatter = logging.Formatter("%(funcName)s: %(message)s")
 log_console_handler.setFormatter(log_console_formatter)
-log_console_handler.addFilter(DiscardFilter('pyhack.inside_api'))
+#log_console_handler.addFilter(DiscardFilter('pyhack.inside_api'))
 log.addHandler(log_console_handler)
 
 
