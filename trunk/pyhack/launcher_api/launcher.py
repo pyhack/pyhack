@@ -91,8 +91,14 @@ class TargetLauncher(object):
         be able to find pyhack on the path.
         """
         
+        home_dll_path = self.pyHome
+        
+        if 'PCbuild' in os.listdir(home_dll_path):
+            home_dll_path = os.path.join(home_dll_path, "PCbuild")
+        
+        log.debug(home_dll_path)
         p = os.environ['PATH'].split(";")
-        p.append(self.pyHome)
+        p.append(home_dll_path)
         os.environ['PATH'] = ';'.join(p)
         
         conf = {
