@@ -40,7 +40,7 @@ class Paths:
         cls.trunk = trunk_path
         cls.svn = svn_top_path
     
-        cls.pyhome = os.path.join(cls.svn, r"python") #'Z:\\pyhack\\python'
+        cls.pyhome = os.path.join(cls.svn, r"python\PCBuild") #'Z:\\pyhack\\python'
         cls.testapps = os.path.join(cls.svn, r"testApps") #'Z:\\pyhack\\testApps'
         cls.pycode = os.path.join(cls.pyHack, r"apps") #'Z:\\pyhack\\trunk\\pyhack\\apps'
         cls.inside_bootstrap_py = os.path.join(cls.pyHack, r"inside_api\bootstrap.py")

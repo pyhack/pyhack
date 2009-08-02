@@ -1,6 +1,12 @@
 """This file is the main starting point for the python interpreter when in the target's process.
 It needs to setup the paths, and then import the real target script"""
 
+import sys
+print sys.path
+print sys.executable
+
+
+
 import logging
 class DiscardFilter(logging.Filter):
     def filter(self, record):
