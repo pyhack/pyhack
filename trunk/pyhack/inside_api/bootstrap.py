@@ -68,6 +68,19 @@ with open(targetDef.pycode, "rb") as f:
         traceback.print_exc()
         print
         pdb.post_mortem(sys.exc_info()[2])
+    else:
+        log.info("Sucessfully imported pyhack.apps.%s. Running main()...")
+        try:
+            continue_mainloop = mod.main(conf)
+        except Exception:
+            continue_mainloop = False
+            log.exception("Encountered exception in plugin's main() function")
+            import pdb
+            import sys
+            import traceback
+            traceback.print_exc()
+            print
+            pdb.post_mortem(sys.exc_info()[2])
 
 import threading
 
@@ -81,6 +94,7 @@ class InterpreterLoop(threading.Thread):
     def run(self):
         while True:
             interact(globals(), mod.__dict__, banner="In Mainloop.")
-            
-mt = InterpreterLoop()
-mt.start()
+
+if continue_mainloop is not False:
+    mt = InterpreterLoop()
+    mt.start()
