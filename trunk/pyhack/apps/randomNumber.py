@@ -5,18 +5,17 @@ from ..util.paths import Paths
 import pyhack.inside_api as api
 from pyhack.util.debug import interact
 
-class NumberPatch(api.CommonPatch):
-    """NumberPatch detours the target's getRandomNumber() function to return 42"""
+class NumberPlugin(api.CommonPlugin):
+    """NumberPlugin detours the target's getRandomNumber() function to return 42"""
     
     offs = {
-        'isValid' : 0xC11030,
-        'getRandomNumber' : 0xC11000,
+        'isValid' : 0x401030,
+        'getRandomNumber' : 0x401000,
     }
 
-    def __init__(self):
-        api.CommonPatch.__init__(self)
+    def plugin_init(self):
         dtr = api.Detour(
-            NumberPatch.offs['getRandomNumber'], 
+            NumberPlugin.offs['getRandomNumber'], 
             False,
             self.return42
         )
@@ -26,18 +25,14 @@ class NumberPatch(api.CommonPatch):
     def return42(self, dtr):
         dtr.registers.eax = 42
 
-patches = (
-    ("number", NumberPatch(), True),
-)
-
-m = api.memory
-
-p = api.PatchManager()
-p.addCommonPatch("kernel32.IsDebuggerPresent").apply()
-p['number'] = NumberPatch().apply()
+class RandomApplication:
+    def __call__(self, conf):
+        p = api.PluginManager()
+        p['number'] = NumberPlugin().apply()
 
 
-import pprint
-pprint.pprint(p)
+        import pprint
+        pprint.pprint(p)
+        interact(globals(), locals())
 
-interact(globals(), locals())
+main = RandomApplication()
