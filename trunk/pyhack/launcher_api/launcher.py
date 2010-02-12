@@ -69,7 +69,7 @@ class TargetLauncher(object):
     for k, v in ERROR_CODES.iteritems():
         ERROR_CODES_NAMED[v[0]] = k
         
-    def __init__(self, dll, pyHome, targetDef):
+    def __init__(self, dll, pyHome, targetDef, mode='start'):
         """Initialize `TargetLauncher` with a dll path, the pyHome path, and a targetDef."""
         self.dll = dll
         self.pyHome = pyHome
@@ -224,7 +224,7 @@ class TargetLauncher(object):
         buf.pushEAX()    #PUSH EAX (hModule to dll)
         buf.movEAX_Addr(kernel32.GetProcAddress(hM, "GetProcAddress"))
         buf.callEAX() #dllFunc() address -> EAX
-
+		
         buf.cmpEAX_Byte(0x0)
         buf.namedJNZ("gpa_success")
 

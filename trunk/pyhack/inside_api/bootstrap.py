@@ -38,13 +38,13 @@ import os, pickle, sys, imp
 sys.path.append(os.environ['pyHack_ParentPath']) #This lets us import pyhack
 
 conf = pickle.loads(os.environ['pyHack_Config'])
-sys.path.append(os.path.dirname(conf['dll'])) #This lets us import pydetour
+sys.path.append(os.path.dirname(conf['dll'])) #This lets us import _detour
 
 
 targetDef = conf['targetDef']
 
 
-import pydetour
+import _detour
 import pyhack
 import pyhack.apps #Prevents 'parent module not loaded' errors
 import pyhack.inside_api

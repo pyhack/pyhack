@@ -1,6 +1,6 @@
 
-from pydetour import DetourAccessViolationException
-from pydetour import memory
+from _detour import DetourAccessViolationException
+from _detour import memory
 
 from pyhack.inside_api.detour import *
 from pyhack.inside_api.plugin_manager import PluginManager

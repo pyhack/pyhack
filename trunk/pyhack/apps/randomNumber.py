@@ -35,4 +35,6 @@ class RandomApplication:
         pprint.pprint(p)
         interact(globals(), locals())
 
+        return False #Don't continue mainloop / don't give me the interpreter
+
 main = RandomApplication()

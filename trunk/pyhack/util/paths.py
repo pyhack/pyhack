@@ -52,8 +52,8 @@ class Paths:
         Assuming this is run from the matching SVN path, returns the path to the dll
         """
         if debug:
-            return os.path.join(cls.trunk, r"pydetour\Debug\pydetour_d.pyd") #'Z:\\pyhack\\trunk\\pydetour\\Debug\\pydetour_d.pyd'
+            return os.path.join(cls.trunk, r"pydetour\Debug\_detour_d.pyd") #'Z:\\pyhack\\trunk\\pydetour\\Debug\\_detour_d.pyd'
         else:
-            return os.path.join(cls.trunk, r"pydetour\Release\pydetour.pyd") #'Z:\\pyhack\\trunk\\pydetour\\Release\\pydetour.pyd'
+            return os.path.join(cls.trunk, r"pydetour\Release\_detour.pyd") #'Z:\\pyhack\\trunk\\pydetour\\Release\\_detour.pyd'
 
 Paths.setPaths()
