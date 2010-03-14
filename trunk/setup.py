@@ -3,9 +3,8 @@ os.environ['DISTUTILS_DEBUG'] = "1"
 __dir__ = os.path.dirname(__file__)
 os.chdir(os.path.realpath(__dir__))
 
+from distutils.core import setup, Extension, Command
 
-
-from distutils.core import setup, Extension
 
 
 def fullsplit(path, result=None):
@@ -33,23 +32,43 @@ def get_packages(main_dir):
             packages.append('.'.join(fullsplit(dirpath)))
     return packages
 
-
-def get_detour_files():
+def get_all_files(main_dir, endswith):
     ret = []
-    detour_dir = os.path.join(__dir__, 'pydetour', 'pydetour')
-    for dirpath, dirnames, filenames in os.walk(detour_dir):
-        for name in (name for name in filenames if name.lower().endswith('.cpp')):
+    for dirpath, dirnames, filenames in os.walk(main_dir):
+        for name in (name for name in filenames if name.lower().endswith(endswith)):
             fn = os.path.join(dirpath,  name)
             ret.append(fn)
     return ret
 
+def get_detour_files():
+    ret = []
+    detour_dir = os.path.join(__dir__, 'pydetour', '_detour')
+    ret = get_all_files(detour_dir, '.cpp')
+    return ret
 
-_detour = Extension('_detour', get_detour_files())
+_detour = Extension(
+    '_detour',
+    get_detour_files(),
+    libraries = ['gdetour'],
+    include_dirs = [os.path.join(__dir__, 'pydetour', 'gdetour')],
+    define_macros = [
+        ('PYTHON_DETOUR_EXPORTS', '1'),
+    ],
+
+)
 
 
 params = dict(
     packages = get_packages('pyhack'),
-    #ext_modules=[_detour],
+
+    libraries = [('gdetour', dict(
+        sources=get_all_files(os.path.join(__dir__, 'pydetour', 'gdetour'), '.cpp'),
+        macros = [
+            ('GENERIC_DETOUR_STATIC', '1'),
+        ],
+    ))],
+
+    ext_modules=[_detour],
     #scripts = ['pyhack/bin/pyhack-admin.py'],
 
 )
