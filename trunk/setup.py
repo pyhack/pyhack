@@ -8,6 +8,7 @@ from distutils.core import setup, Extension, Command
 
 
 def fullsplit(path, result=None):
+    #Copied from http://code.djangoproject.com/browser/django/trunk/setup.py
     """
     Split a pathname into components (the opposite of os.path.join) in a
     platform-neutral way.
@@ -40,15 +41,9 @@ def get_all_files(main_dir, endswith):
             ret.append(fn)
     return ret
 
-def get_detour_files():
-    ret = []
-    detour_dir = os.path.join(__dir__, 'pydetour', '_detour')
-    ret = get_all_files(detour_dir, '.cpp')
-    return ret
-
 _detour = Extension(
     '_detour',
-    get_detour_files(),
+    get_all_files(os.path.join(__dir__, 'pydetour', '_detour'), '.cpp'),
     libraries = ['gdetour'],
     include_dirs = [os.path.join(__dir__, 'pydetour', 'gdetour')],
     define_macros = [
