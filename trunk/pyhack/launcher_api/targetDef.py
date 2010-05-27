@@ -23,6 +23,7 @@ class TargetDef(object):
         self.startIn = _NOT_SET_STR
         self.args =  _NOT_SET_STR
         self.pycode = _NOT_SET_STR
+        self.dll = _NOT_SET_STR
         self._setup_args = None
         if init_dict is not None:
             self.fromDict(name, init_dict)
@@ -33,6 +34,7 @@ class TargetDef(object):
         self.startIn = in_dict['startIn']
         self.args = in_dict.get('args', _NOT_SET_STR)
         self.pycode = in_dict['pycode']
+        self.dll = in_dict.get('dll', None)
         self._setup_args = in_dict.get('setup_args', None)
         
     def setup_args(self):
