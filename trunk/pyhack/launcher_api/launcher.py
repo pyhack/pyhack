@@ -147,20 +147,201 @@ class TargetLauncher(object):
         alloc = self._createInjectedStub(self.dll, p.memory)
 
         yield (TargetLauncher.ALLOC_ALLOCATED, (alloc, ))
+
+        #log.info("Creating remote thread")
+        #retVal = p.createRemoteThreadWait(alloc['executionPoint']+1)
+        import ctypes
+        evt = ctypes.windll.kernel32.CreateEventA(0,0,0,"Local\pyhack_event")
+        log.info("Starting APC")
+        #p.queueAPC(alloc['executionPoint']+1)
+        p.queueAPC(alloc['bufapc']+1)
         
-        log.info("Creating remote thread")
-        retVal = p.createRemoteThreadWait(alloc['executionPoint']+1)
+        p.resume()
         
+        raw_input("Press enter to continue process")
+        evt = ctypes.windll.kernel32.SetEvent(evt)
+        ctypes.windll.kernel32.CloseHandle(evt)
+
+        
+        retVal = 0
         yield (TargetLauncher.REMOTE_THREAD_RETURN, (retVal, ))
         
         yield (TargetLauncher.ALLOC_BEFORE_FREE, (alloc, ))
         
-        log.info("Freeing memory")
-        for a in alloc.values():
-            p.memory.free(a)
-
+        log.info("Not Freeing memory")
+        #for a in alloc.values():
+        #    p.memory.free(a)
 
     def _createInjectedStub(self, dll, mem):
+        """Allocate memory, create an ASM stub, copy strings and code into the target.
+        
+        This stub has five goals:
+        - AllocConsole: This gives us a new console in the target process.
+        - LoadLibraryA: This is used to load the pydetour dll into the process.
+        - GetProcAddress: This is used to find our target exported function from within the above DLL.
+        - Launch python code: Call the exported function, passing the path of the bootstrap function.
+        - Replace entry point with the bytes we grabbed
+        - Return exit status (?somehow)
+        - POP 3 times (passed 3 params we don't need)
+        
+        This function returns a dictionary of allocation points in the remote process.
+        
+        High level description of ASM function::
+        
+            def InjectedStub():
+                kernel32.AllocConsole()
+                hModule = kernel32.LoadLibraryA(dll)
+                if not hModule:
+                    ExitThread(errors['ll_failed'])
+                rpf = kernel32.GetProcAddress(hModule, "run_python_file")
+                if not rpf:
+                    ExitThread(errors['gpc_failed'])
+                ret = rpf(Paths.inside_bootstrap_py)
+                ExitThread(ret)
+        """
+        errors = TargetLauncher.ERROR_CODES_NAMED
+
+        alloc = {}
+        alloc['pyPath'] = mem.allocWrite(Paths.inside_bootstrap_py)
+        alloc['dllPath'] = mem.allocWrite(dll)
+        alloc['dllFunc'] = mem.allocWrite("run_python_file")
+        alloc['event'] = mem.allocWrite("Local\pyhack_event")
+        alloc['executionPoint'] = mem.alloc(None, 256)
+        hM = kernel32.GetModuleHandleA("kernel32.dll")
+        hM_ntdll = kernel32.GetModuleHandleA("ntdll.dll")
+
+        from util.buffer import ASMBuffer
+        buf = ASMBuffer(256)
+
+        buf.INT3() #Debugger trap
+        buf.INT3() #Debugger trap
+        buf.INT3() #Debugger trap
+        buf.INT3() #Debugger trap
+        buf.INT3() #Debugger trap
+        
+        #---------------------------------------------------------------------
+        buf.movEAX_Addr(kernel32.GetProcAddress(hM, "AllocConsole"))
+        buf.callEAX() #AllocConsole()
+
+        buf.pushAddr(alloc['event'])
+        buf.pushDword(0)
+        buf.pushDword(0)
+        buf.pushDword(0)
+        buf.movEAX_Addr(kernel32.GetProcAddress(hM, "CreateEventA"))
+        buf.callEAX()
+        buf.INT3() #Debugger trap
+        buf.pushEAX()
+        buf.pushDword(0xFFFFFFFF)
+        buf.pushEAX()
+        buf.movEAX_Addr(kernel32.GetProcAddress(hM, "WaitForSingleObject"))
+        buf.callEAX()
+        
+        buf.movEAX_Addr(kernel32.GetProcAddress(hM, "CloseHandle"))
+        buf.callEAX()
+        
+        #---------------------------------------------------------------------
+        buf.pushAddr(alloc['dllPath'])
+        buf.movEAX_Addr(kernel32.GetProcAddress(hM, "LoadLibraryA"))
+        buf.callEAX() #hModule to dll -> EAX
+        buf.cmpEAX_Byte(0x0)
+        buf.namedJNZ("ll_success")
+
+        if True:
+            #buf.movEAX_Addr(kernel32.GetProcAddress(hM, "GetLastError"))
+            #buf.callEAX() #GetLastError
+            #buf.pushEAX()
+            buf.pushDword(errors['ll_failed']) #PUSH 0x1 (thread exit code) 1 = LoadLibrary Failed
+            #buf.movEAX_Addr(kernel32.GetProcAddress(hM, "ExitThread"))
+            buf.popEAX()
+            buf.namedJMP("exit")
+
+        #---------------------------------------------------------------------
+        buf.nameTarget("ll_success")
+        buf.pushAddr(alloc['dllFunc'])
+        buf.pushEAX()    #PUSH EAX (hModule to dll)
+        buf.movEAX_Addr(kernel32.GetProcAddress(hM, "GetProcAddress"))
+        buf.callEAX() #dllFunc() address -> EAX
+		
+        buf.cmpEAX_Byte(0x0)
+        buf.namedJNZ("gpa_success")
+
+        if True:
+            buf.pushDword(errors['gpc_failed']) #PUSH thread exit code 'GetProcAddress Failed'
+            #buf.movEAX_Addr(kernel32.GetProcAddress(hM, "ExitThread"))
+            buf.popEAX()
+            buf.namedJMP("exit")
+
+        #---------------------------------------------------------------------
+        buf.nameTarget("gpa_success")
+        buf.pushAddr(1) #turns on pdb debugging
+        buf.pushAddr(alloc['pyPath'])
+        buf.callEAX() #This calls our run_python_code script
+        buf.addESP(8)
+        buf.cmpEAX_Byte(0x0)
+        buf.namedJZ("run_success")
+
+        if True:
+            #run_python_code failed, return it's error code
+            buf.pushEAX()
+            #buf.movEAX_Addr(kernel32.GetProcAddress(hM, "ExitThread"))
+            buf.popEAX()
+            buf.namedJMP("exit")
+        
+        #---------------------------------------------------------------------
+        buf.nameTarget("run_success")
+        
+        #buf.INT3()
+        
+        #buf.pushByte(0) #PUSH 0x0 (thread exit code, success)
+        #buf.movEAX_Addr(kernel32.GetProcAddress(hM, "ExitThread"))
+        #buf.callEAX() #This cleanly exits the thread
+        
+        buf.nameTarget("exit")
+       
+
+       
+        buf.push([0xCC, 0xCC, 0xCC, 0xCC, 0xCC]) #Debugger trap
+        buf.push([0xCC, 0xCC, 0xCC, 0xCC, 0xCC]) #Debugger trap
+
+        buf.ret(3*4) #APC is passed 3 params
+        
+        buf.verifyJumps()
+        log.debug("Stub is %s bytes."%(buf.cursor))
+        mem.write(alloc['executionPoint'], buf.buf.raw)
+        
+        alloc['bufapc'] = mem.alloc(None, 256)
+        from util.buffer import ASMBuffer
+        bufapc = ASMBuffer(256)
+        bufapc.INT3()
+        bufapc.pushAddr(alloc['event'])
+        bufapc.pushDword(0)
+        bufapc.pushDword(0)
+        bufapc.pushDword(0)
+        bufapc.movEAX_Addr(kernel32.GetProcAddress(hM, "CreateEventA"))
+        bufapc.callEAX()
+        bufapc.pushEAX()
+        bufapc.pushDword(0xFFFFFFFF)
+        bufapc.pushEAX()
+        bufapc.movEAX_Addr(kernel32.GetProcAddress(hM, "WaitForSingleObject"))
+        bufapc.callEAX()
+        bufapc.movEAX_Addr(kernel32.GetProcAddress(hM, "CloseHandle"))
+        bufapc.callEAX()        
+        bufapc.pushDword(0)
+        bufapc.pushDword(0)
+        bufapc.pushDword(0)
+        bufapc.pushAddr(alloc['executionPoint'])
+        bufapc.movEAX_Addr(kernel32.GetProcAddress(hM, "GetCurrentThread"))
+        bufapc.callEAX()
+        bufapc.pushEAX()
+        bufapc.movEAX_Addr(kernel32.GetProcAddress(hM_ntdll, "NtQueueApcThread"))
+        bufapc.callEAX()
+        bufapc.ret(3*4)
+        mem.write(alloc['bufapc'], bufapc.buf.raw)
+
+        return alloc
+        
+        
+    def _createInjectedStub_old(self, dll, mem):
         """Allocate memory, create an ASM stub, copy strings and code into the target and executed via CreateRemoteThread().
         
         This stub has five goals:

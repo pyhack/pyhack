@@ -67,6 +67,10 @@ class Process(object):
         if s == 0:
             raise WinError()
         return ec
+    def queueAPC(self, address, param1=0, param2=0, param3=0, thread=None):
+        if thread is None:
+            thread = self._hMainThread
+        return ntdll.NtQueueApcThread(thread, address, param1, param2, param3)
     def createRemoteThreadWait(self, address):
         log.debug("Calling CreateRemoteThread on hProcess %s @ 0x%X"%(self.hProcess, address))
         threadId = DWORD()

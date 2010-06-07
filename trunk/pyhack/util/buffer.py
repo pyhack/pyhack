@@ -88,6 +88,14 @@ class ASMBuffer(Buffer):
     def __init__(self, maxlen):
         Buffer.__init__(self, maxlen)
         self.namedJumps = {}
+    def PUSHAD(self):
+        self.push(0x60)
+    def PUSHF(self):
+        self.push(0x9C)
+    def POPAD(self):
+        self.push(0x61)
+    def POPF(self):
+        self.push(0x9D)
     def pushAddr(self, addr):
         self.push(0x68)
         self._appendDWORD(addr)
@@ -106,6 +114,8 @@ class ASMBuffer(Buffer):
     def pushByte(self, b):
         self.push(0x6A)
         self._appendBYTE(b)
+    def popEAX(self):
+        self.push(0x58)
     def cmpEAX_Byte(self, b):
         self.push([0x83, 0xF8])
         self._appendBYTE(b)
@@ -115,6 +125,23 @@ class ASMBuffer(Buffer):
     def addEAX(self, b):
         self.push([0x83, 0xC0])
         self._appendBYTE(b)
+    def ret(self, bytes=0):
+        if bytes < 256:
+            self.push([0xC2, bytes, 0x00])
+        else:
+            raise Exception("NotImplemented")
+    def namedJMP(self, name):
+        if name not in self.namedJumps:
+            self.namedJumps[name] = []
+        if self.namedJumps[name] == _ASM_BUFFER_JUMP_FILLED_IN:
+            raise ASMBuffer_TargetFilledException(name)
+        thisJump = {}
+        thisJump['start'] = self.cursor
+        self.push(0xEB)
+        thisJump['start_d'] = self.cursor
+        self.push(0x00) #this gets filled in
+        thisJump['beginjmp'] = self.cursor
+        self.namedJumps[name].append(thisJump)
     def namedJZ(self, name):
         if name not in self.namedJumps:
             self.namedJumps[name] = []
@@ -146,11 +173,11 @@ class ASMBuffer(Buffer):
         if name not in self.namedJumps:
             raise KeyError
         nj_list = self.namedJumps[name]
-        for nj in nj_list:
+        for i, nj in enumerate(nj_list):
             nj['end'] = self.cursor
             nj['dist'] = nj['end'] - nj['beginjmp']
             self._appendBYTE(nj['dist'], nj['start_d'])
-            nj = _ASM_BUFFER_JUMP_FILLED_IN
+            nj_list[i] = _ASM_BUFFER_JUMP_FILLED_IN
     def verifyJumps(self, ignoreSuccess_labels=True):
         bads = set()
         for name, v in self.namedJumps.iteritems():

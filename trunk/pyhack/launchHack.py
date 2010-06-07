@@ -82,7 +82,7 @@ def main(argv):
         return 2
 
     log.info("Resuming main thread")
-    p.resume()
+    #p.resume()
     
     #interact(globals(), locals())
 

@@ -36,8 +36,10 @@ class TOKEN_PRIVILEGES(Structure):
 
 if hasattr(ctypes, 'windll'):
     kernel32 = windll.kernel32
+    ntdll = windll.ntdll
 else:
     kernel32 = None
+    ntdll = None
     
 NULL = None
 
