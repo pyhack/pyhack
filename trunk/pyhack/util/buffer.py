@@ -102,7 +102,9 @@ class ASMBuffer(Buffer):
     def movEAX_Addr(self, addr):
         self.push(0xB8)
         self._appendDWORD(addr)
-    def callEAX(self):
+    def callEAX(self, addr=None):
+        if addr:
+            self.movEAX_Addr(addr)
         self.push([0xFF, 0xD0])
     def pushEAX(self):
         self.push(0x50)

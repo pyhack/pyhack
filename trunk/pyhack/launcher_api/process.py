@@ -57,6 +57,8 @@ class Process(object):
     def suspend(self):
         log.error("Process.suspend() is not yet implemented")
         raise NotImplementedError
+    def _mainsuspend(self):
+        kernel32.SuspendThread(self._hMainThread)
     def resume(self):
         kernel32.ResumeThread(self._hMainThread)
     def terminate(self):
