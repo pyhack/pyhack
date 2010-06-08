@@ -213,31 +213,15 @@ class TargetLauncher(object):
         from util.buffer import ASMBuffer
         buf = ASMBuffer(256)
 
-        buf.INT3() #Debugger trap
-        buf.INT3() #Debugger trap
-        buf.INT3() #Debugger trap
-        buf.INT3() #Debugger trap
-        buf.INT3() #Debugger trap
+        #buf.INT3() #Debugger trap
+        #buf.INT3() #Debugger trap
+        #buf.INT3() #Debugger trap
+        #buf.INT3() #Debugger trap
+        #buf.INT3() #Debugger trap
         
         #---------------------------------------------------------------------
         buf.movEAX_Addr(kernel32.GetProcAddress(hM, "AllocConsole"))
         buf.callEAX() #AllocConsole()
-
-        buf.pushAddr(alloc['event'])
-        buf.pushDword(0)
-        buf.pushDword(0)
-        buf.pushDword(0)
-        buf.movEAX_Addr(kernel32.GetProcAddress(hM, "CreateEventA"))
-        buf.callEAX()
-        buf.INT3() #Debugger trap
-        buf.pushEAX()
-        buf.pushDword(0xFFFFFFFF)
-        buf.pushEAX()
-        buf.movEAX_Addr(kernel32.GetProcAddress(hM, "WaitForSingleObject"))
-        buf.callEAX()
-        
-        buf.movEAX_Addr(kernel32.GetProcAddress(hM, "CloseHandle"))
-        buf.callEAX()
         
         #---------------------------------------------------------------------
         buf.pushAddr(alloc['dllPath'])
@@ -261,7 +245,7 @@ class TargetLauncher(object):
         buf.pushEAX()    #PUSH EAX (hModule to dll)
         buf.movEAX_Addr(kernel32.GetProcAddress(hM, "GetProcAddress"))
         buf.callEAX() #dllFunc() address -> EAX
-		
+        
         buf.cmpEAX_Byte(0x0)
         buf.namedJNZ("gpa_success")
 
@@ -296,14 +280,14 @@ class TargetLauncher(object):
         #buf.movEAX_Addr(kernel32.GetProcAddress(hM, "ExitThread"))
         #buf.callEAX() #This cleanly exits the thread
         
-        buf.nameTarget("exit")
+        buf.nameTarget("exit", allowFlowThrough=True)
        
-
-       
-        buf.push([0xCC, 0xCC, 0xCC, 0xCC, 0xCC]) #Debugger trap
-        buf.push([0xCC, 0xCC, 0xCC, 0xCC, 0xCC]) #Debugger trap
-
         buf.ret(3*4) #APC is passed 3 params
+       
+        buf.push([0xCC, 0xCC, 0xCC, 0xCC, 0xCC]) #Debugger trap
+        buf.push([0xCC, 0xCC, 0xCC, 0xCC, 0xCC]) #Debugger trap
+
+
         
         buf.verifyJumps()
         log.debug("Stub is %s bytes."%(buf.cursor))
@@ -312,7 +296,7 @@ class TargetLauncher(object):
         alloc['bufapc'] = mem.alloc(None, 256)
         from util.buffer import ASMBuffer
         bufapc = ASMBuffer(256)
-        bufapc.INT3()
+        bufapc.INT3() #This is skipped over by scheduling the first apc at +1
         bufapc.pushAddr(alloc['event'])
         bufapc.pushDword(0)
         bufapc.pushDword(0)
@@ -378,7 +362,7 @@ class TargetLauncher(object):
         from util.buffer import ASMBuffer
         buf = ASMBuffer(128)
 
-        buf.INT3() #Debugger trap
+        #buf.INT3() #Debugger trap
         
         #---------------------------------------------------------------------
         buf.movEAX_Addr(kernel32.GetProcAddress(hM, "AllocConsole"))
