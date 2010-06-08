@@ -165,7 +165,7 @@ class TargetLauncher(object):
             p.queueAPC(alloc['executionPoint']+1)
             p.resume()
         
-            #raw_input("Press enter to continue child process (beginning of first APC)")
+            raw_input("Press enter to continue child process (beginning of first APC)")
             ctypes.windll.kernel32.SetEvent(child_evt)
             
             print "Waiting for child to initialize"
@@ -253,7 +253,8 @@ class TargetLauncher(object):
             buf.namedJNZ("ll_success")
 
             if True:
-                #buf.callEAX(kernel32.GetProcAddress(hM, "GetLastError"))
+                buf.callEAX(kernel32.GetProcAddress(hM, "GetLastError"))
+                buf.INT3()
                 #buf.pushEAX()
                 buf.pushDword(errors['ll_failed']) #PUSH 0x1 (thread exit code) 1 = LoadLibrary Failed
                 #buf.movEAX_Addr(kernel32.GetProcAddress(hM, "ExitThread"))
@@ -269,6 +270,7 @@ class TargetLauncher(object):
             buf.namedJNZ("gpa_success")
 
             if True:
+                buf.INT3()
                 buf.pushDword(errors['gpc_failed']) #PUSH thread exit code 'GetProcAddress Failed'
                 #buf.movEAX_Addr(kernel32.GetProcAddress(hM, "ExitThread"))
                 buf.popEAX()
@@ -284,6 +286,7 @@ class TargetLauncher(object):
             buf.namedJZ("run_success")
 
             if True:
+                buf.INT3()
                 #run_python_code failed, return it's error code
                 buf.pushEAX()
                 #buf.movEAX_Addr(kernel32.GetProcAddress(hM, "ExitThread"))
