@@ -49,9 +49,15 @@ _detour = Extension(
     define_macros = [
         ('PYTHON_DETOUR_EXPORTS', '1'),
     ],
-
 )
 
+pydasm = Extension(
+    'pydasm',
+    sources = [
+	os.path.join(__dir__, '..', 'libdasm', 'libdasm.c'),
+	os.path.join(__dir__, '..', 'libdasm', 'pydasm', 'pydasm.c'),
+    ]
+)
 
 params = dict(
     packages = get_packages('pyhack'),
@@ -63,8 +69,8 @@ params = dict(
         ],
     ))],
 
-    ext_modules=[_detour],
-    #scripts = ['pyhack/bin/pyhack-admin.py'],
+    ext_modules=[_detour, pydasm],
+    scripts = ['pyhack/pyhack-admin.py'],
 
 )
 
