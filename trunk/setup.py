@@ -5,8 +5,6 @@ os.chdir(os.path.realpath(__dir__))
 
 from distutils.core import setup, Extension, Command
 
-
-
 def fullsplit(path, result=None):
     #Copied from http://code.djangoproject.com/browser/django/trunk/setup.py
     """
@@ -41,6 +39,13 @@ def get_all_files(main_dir, endswith):
             ret.append(fn)
     return ret
 
+gdetour = ('gdetour', dict(
+        sources=get_all_files(os.path.join(__dir__, 'pydetour', 'gdetour'), '.cpp'),
+        macros = [
+            ('GENERIC_DETOUR_STATIC', '1'),
+        ],
+))
+    
 _detour = Extension(
     '_detour',
     get_all_files(os.path.join(__dir__, 'pydetour', '_detour'), '.cpp'),
@@ -48,32 +53,24 @@ _detour = Extension(
     include_dirs = [os.path.join(__dir__, 'pydetour', 'gdetour')],
     define_macros = [
         ('PYTHON_DETOUR_EXPORTS', '1'),
+        ('GENERIC_DETOUR_STATIC', '1'),
     ],
 )
 
 pydasm = Extension(
     'pydasm',
     sources = [
-	os.path.join(__dir__, '..', 'libdasm', 'libdasm.c'),
-	os.path.join(__dir__, '..', 'libdasm', 'pydasm', 'pydasm.c'),
+    os.path.join(__dir__, '..', 'libdasm', 'libdasm.c'),
+    os.path.join(__dir__, '..', 'libdasm', 'pydasm', 'pydasm.c'),
     ]
 )
 
 params = dict(
     packages = get_packages('pyhack'),
-
-    libraries = [('gdetour', dict(
-        sources=get_all_files(os.path.join(__dir__, 'pydetour', 'gdetour'), '.cpp'),
-        macros = [
-            ('GENERIC_DETOUR_STATIC', '1'),
-        ],
-    ))],
-
+    libraries = [gdetour],
     ext_modules=[_detour, pydasm],
-    scripts = ['pyhack/pyhack-admin.py'],
-
+    scripts = ['pyhack/scripts/pyhack-admin.py'],
 )
-
 
 setup(
     name='pyhack',
@@ -91,7 +88,7 @@ setup(
         'License :: OSI Approved :: GNU General Public License (GPL)',
         'Operating System :: Microsoft :: Windows',
         'Programming Language :: Python :: 2'
-        'Programming Language :: Python :: 2.6',
+        'Programming Language :: Python :: 2.7',
         'Topic :: Software Development :: Debuggers',
         'Topic :: Software Development :: Disassemblers'
     ],
