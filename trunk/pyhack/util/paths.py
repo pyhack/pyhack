@@ -53,21 +53,26 @@ class Paths:
         Assuming this is run from the matching SVN path, returns the path to the dll
         
         At the time of execution, this file may exist in any of the following places:
-            *In pydetour\Release\_detour.pyd if VS 2008 built the file
-            *In a temp lib directory if using setup.py build
-            *Installed in the pythonpath
-            *Installed in trunk dir if installed with setup.py develop
+            * In ``pydetour\Release\_detour.pyd`` if VS 2008 built the file
+            * In a temp lib directory if using setup.py build
+            * Installed in the pythonpath
+            * Installed in trunk dir if installed with setup.py develop
+            
+        
+        Because we're on 2.7, we can't use importlib.
+        The source of importlib (in 3.1) checks `the following <http://hg.python.org/cpython/file/6f0bcfc17a9e/Lib/importlib/_bootstrap.py#l885>`_ to load a module::
+        
+            for finder in sys.meta_path + [BuiltinImporter, FrozenImporter, _DefaultPathFinder]:
+                loader = finder.find_module(name, path)
+                if loader is not None:
+                    loader.load_module(name)
+                    break
+        
+        We can, however, use `imp.find_module <http://docs.python.org/library/imp.html#imp.find_module>`_, which is nearly the same thing::
+        
+            >>> imp.find_module('_detour')
+            (<open file 'z:\pyhack\trunk\_detour.pyd', mode 'rb' at 0x01D85F40>, 'z:\\pyhack\\trunk\\_detour.pyd', ('.pyd', 'rb', 3))
         """
-        #Because we're on 2.7, we can't use importlib.
-        #The source of importlib (in 3.1) checks the following to load a module:
-        #    for finder in sys.meta_path + [BuiltinImporter, FrozenImporter, _DefaultPathFinder]:
-        #        loader = finder.find_module(name, path)
-        #        if loader is not None:
-        #            loader.load_module(name)
-        #            break
-        #We can, however, use imp.find_module, which is nearly the same thing.
-        #>>>imp.find_module('_detour')
-        #(<open file 'z:\pyhack\trunk\_detour.pyd', mode 'rb' at 0x01D85F40>, 'z:\\pyhack\\trunk\\_detour.pyd', ('.pyd', 'rb', 3))
         fm = imp.find_module('_detour')
         if fm[0]:
             fm[0].close()

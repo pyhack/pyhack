@@ -2,6 +2,7 @@
 setlocal
 set PWD=%CD%
 set HERE=%~pd0
+set OLDPATH=%PATH%
 set PYTHON_TAR=Python-2.7.2.tar.bz2
 set PYTHON_TAR_XFOLDER=Python-2.7.2
 set PYTHON_URL=http://www.python.org/ftp/python/2.7.2/Python-2.7.2.tar.bz2
@@ -38,6 +39,7 @@ echo.
 cd python\PCBuild
 if not exist python.exe call build.bat
 if not exist python_d.exe call build.bat -d
+set PY_DIR=%CD%
 set PYTHON=%CD%\python.exe
 set PYTHON_D=%CD%\python_d.exe
 cd /d %HERE%
@@ -48,9 +50,16 @@ wget %DISTRIBUTE_URL%
 "%PYTHON%" distribute_setup.py
 del distribute_setup.py
 
-:install_pip
-::Because why not?
+:install_packages
 "%PYTHON_SCRIPTS%\easy_install.exe" pip
+"%PYTHON_SCRIPTS%\pip.exe" install virtualenv
+"%PYTHON_SCRIPTS%\pip.exe" install sphinx
+
+:create_pyhack_docs
+cd /d %HERE%\trunk\doc
+::sphinx batch needs this
+set path=%HERE%\python\PCbuild;%HERE%\python\scripts;
+call make.bat html
 
 :end
 cd /d %PWD%

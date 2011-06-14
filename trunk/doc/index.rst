@@ -6,9 +6,10 @@ Documentation last generated |today|.
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 4
 
    api
+   developing_pyhack
 
 Indices and tables
 ==================
