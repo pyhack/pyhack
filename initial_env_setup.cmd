@@ -1,9 +1,12 @@
 @echo off
+setlocal
 set PWD=%CD%
 set HERE=%~pd0
 set PYTHON_TAR=Python-2.7.2.tar.bz2
 set PYTHON_TAR_XFOLDER=Python-2.7.2
 set PYTHON_URL=http://www.python.org/ftp/python/2.7.2/Python-2.7.2.tar.bz2
+
+set DISTRIBUTE_URL=http://python-distribute.org/distribute_setup.py
 
 cd /d %HERE%
 
@@ -35,6 +38,19 @@ echo.
 cd python\PCBuild
 if not exist python.exe call build.bat
 if not exist python_d.exe call build.bat -d
+set PYTHON=%CD%\python.exe
+set PYTHON_D=%CD%\python_d.exe
+cd /d %HERE%
+set PYTHON_SCRIPTS=%HERE%\python\Scripts
+
+:install_distribute
+wget %DISTRIBUTE_URL%
+"%PYTHON%" distribute_setup.py
+del distribute_setup.py
+
+:install_pip
+::Because why not?
+"%PYTHON_SCRIPTS%\easy_install.exe" pip
 
 :end
 cd /d %PWD%

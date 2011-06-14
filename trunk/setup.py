@@ -1,9 +1,16 @@
-import os
+import os, sys
 os.environ['DISTUTILS_DEBUG'] = "1"
 __dir__ = os.path.dirname(__file__)
 os.chdir(os.path.realpath(__dir__))
 
-from distutils.core import setup, Extension, Command
+from distutils.core import setup, Extension
+
+has_distribute = False
+try:
+	from setuptools import setup, Extension
+	has_distribute = True
+except ImportError:
+	pass
 
 def fullsplit(path, result=None):
     #Copied from http://code.djangoproject.com/browser/django/trunk/setup.py
@@ -74,7 +81,7 @@ params = dict(
 
 setup(
     name='pyhack',
-    version='0.1',
+    version='0.1dev',
     url='http://cbwhiz.com',
     author='CBWhiz',
     author_email='CBWhiz@gmail.com',
@@ -87,7 +94,7 @@ setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: GNU General Public License (GPL)',
         'Operating System :: Microsoft :: Windows',
-        'Programming Language :: Python :: 2'
+        'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
         'Topic :: Software Development :: Debuggers',
         'Topic :: Software Development :: Disassemblers'

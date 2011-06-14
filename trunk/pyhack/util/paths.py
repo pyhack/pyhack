@@ -19,6 +19,7 @@ The available class-attributes are:
 """
 
 import os
+import imp
 
 class Paths:
     """
@@ -50,10 +51,34 @@ class Paths:
     def get_dll_path(cls, debug=True):
         """
         Assuming this is run from the matching SVN path, returns the path to the dll
+        
+        At the time of execution, this file may exist in any of the following places:
+            *In pydetour\Release\_detour.pyd if VS 2008 built the file
+            *In a temp lib directory if using setup.py build
+            *Installed in the pythonpath
+            *Installed in trunk dir if installed with setup.py develop
         """
-        if debug:
-            return os.path.join(cls.trunk, r"pydetour\Debug\_detour_d.pyd") #'Z:\\pyhack\\trunk\\pydetour\\Debug\\_detour_d.pyd'
-        else:
-            return os.path.join(cls.trunk, r"pydetour\Release\_detour.pyd") #'Z:\\pyhack\\trunk\\pydetour\\Release\\_detour.pyd'
+        #Because we're on 2.7, we can't use importlib.
+        #The source of importlib (in 3.1) checks the following to load a module:
+        #    for finder in sys.meta_path + [BuiltinImporter, FrozenImporter, _DefaultPathFinder]:
+        #        loader = finder.find_module(name, path)
+        #        if loader is not None:
+        #            loader.load_module(name)
+        #            break
+        #We can, however, use imp.find_module, which is nearly the same thing.
+        #>>>imp.find_module('_detour')
+        #(<open file 'z:\pyhack\trunk\_detour.pyd', mode 'rb' at 0x01D85F40>, 'z:\\pyhack\\trunk\\_detour.pyd', ('.pyd', 'rb', 3))
+        fm = imp.find_module('_detour')
+        if fm[0]:
+            fm[0].close()
+        module_path = fm[1]
+        #module_path may or may not contain _d depending on if /this script/ was run in a debug python
+        #We don't care though, so we remove it always...
+        module_path = module_path.replace('_detour_d.pyd', '_detour.pyd')
+        if debug: #Unless debug was requested
+            module_path = module_path.replace('_detour.pyd', '_detour_d.pyd')
+        if not os.path.exists(module_path):
+            raise ImportError('%s does not exists, have you built the extension modules?'%(module_path))
+        return module_path
 
 Paths.setPaths()
