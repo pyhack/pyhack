@@ -1,5 +1,5 @@
 The :mod:`pydetour` Module
-----------------------
+--------------------------
 
 This module is the C++ component of pyhack. It manages the raw creation of the detours, as well as other useful modules.
 
