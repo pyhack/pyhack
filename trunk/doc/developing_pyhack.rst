@@ -62,7 +62,7 @@ Developing
 
 Environment
 ^^^^^^^^^^^^^
-* I was unable to get virtualenv to work properly from this source build.
+* I was unable to get virtualenv to work properly from this source build. I traced it to `issue 139 <https://github.com/pypa/virtualenv/issues/139>` in virtualenv.
 * As a result, I use the site-packages folder in ``python\lib``
 * You can easily install packages here via ``python\scripts\pip install (package)``
 * You may want to add this new python to your path while working in a command window: ``set PATH=%CD%\python\PCbuild;%CD%\python\scripts;%PATH%``
