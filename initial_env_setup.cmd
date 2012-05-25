@@ -3,9 +3,9 @@ setlocal
 set PWD=%CD%
 set HERE=%~pd0
 set OLDPATH=%PATH%
-set PYTHON_TAR=Python-2.7.2.tar.bz2
-set PYTHON_TAR_XFOLDER=Python-2.7.2
-set PYTHON_URL=http://www.python.org/ftp/python/2.7.2/Python-2.7.2.tar.bz2
+set PYTHON_TAR=Python-2.7.3.tar.bz2
+set PYTHON_TAR_XFOLDER=Python-2.7.3
+set PYTHON_URL=http://python.org/ftp/python/2.7.3/Python-2.7.3.tar.bz2
 
 set DISTRIBUTE_URL=http://python-distribute.org/distribute_setup.py
 
@@ -64,6 +64,7 @@ goto build_python
 :novs9
 echo Visual Studio 9.0 (2008) was not found.
 echo.
+goto end
 
 :build_python
 cd python\PCBuild
