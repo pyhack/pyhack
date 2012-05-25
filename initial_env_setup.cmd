@@ -11,6 +11,36 @@ set DISTRIBUTE_URL=http://python-distribute.org/distribute_setup.py
 
 cd /d %HERE%
 
+::Check for some cygwin commands we need
+wget --version 2>NUL > NUL
+IF ERRORLEVEL 1 GOTO :no_wget
+tar --version 2>NUL > NUL
+IF ERRORLEVEL 1 GOTO :no_tar
+mv --version 2>NUL > NUL
+IF ERRORLEVEL 1 GOTO :no_mv
+
+
+goto get_python
+
+:no_wget
+echo.
+echo wget not found, is it on the path?
+echo You should install cygwin.
+goto end
+
+:no_tar
+echo.
+echo tar not found, is it on the path?
+echo You should install cygwin.
+goto end
+
+:no_mv
+echo.
+echo mv not found, is it on the path?
+echo You should install cygwin.
+echo.
+goto end
+
 :get_python
 if exist %PYTHON_TAR% goto extract_python
 wget %PYTHON_URL%
